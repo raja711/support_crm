@@ -4,6 +4,13 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.routes import router
+from app.database import engine, Base
+from app import models
+
+
+# Create database tables
+Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI(
     title="Support Ticket CRM",

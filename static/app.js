@@ -1,4 +1,3 @@
-```javascript
 console.log("Support CRM app.js loaded");
 
 const API_BASE = "/api/tickets";
@@ -33,7 +32,7 @@ function formatDate(value) {
 
     const date = new Date(value);
 
-    if (isNaN(date.getTime())) {
+    if (Number.isNaN(date.getTime())) {
         return escapeHTML(value);
     }
 
@@ -78,8 +77,6 @@ function statusBadge(status) {
 
 // =====================================================
 // CREATE MODAL
-// IMPORTANT: window. is required because index.html
-// uses onclick="showCreateForm()"
 // =====================================================
 
 window.showCreateForm = function () {
@@ -160,7 +157,7 @@ async function loadTickets() {
             : "";
 
         if (search) {
-            params.append("search", search);
+            params.set("search", search);
         }
 
         if (
@@ -168,7 +165,7 @@ async function loadTickets() {
             status !== "All" &&
             status !== "All Statuses"
         ) {
-            params.append("status", status);
+            params.set("status", status);
         }
 
         const query = params.toString();
@@ -183,19 +180,36 @@ async function loadTickets() {
             method: "GET",
             headers: {
                 "Accept": "application/json"
-            }
+            },
+            cache: "no-store"
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+        const responseText = await response.text();
+
+        let data;
+
+        try {
+            data = responseText
+                ? JSON.parse(responseText)
+                : [];
+        } catch (parseError) {
+            console.error("JSON parse error:", parseError);
+            throw new Error("Invalid server response.");
         }
 
-        const data = await response.json();
+        if (!response.ok) {
+            const message =
+                data && data.detail
+                    ? data.detail
+                    : `HTTP ${response.status}`;
+
+            throw new Error(message);
+        }
 
         console.log("Tickets received:", data);
 
         if (!Array.isArray(data)) {
-            throw new Error("Invalid API response");
+            throw new Error("Invalid API response.");
         }
 
         renderTickets(data);
@@ -217,7 +231,7 @@ async function loadTickets() {
                 <button
                     type="button"
                     onclick="loadTickets()"
-                    class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg"
+                    class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                 >
                     Retry
                 </button>
@@ -229,7 +243,6 @@ async function loadTickets() {
 }
 
 
-// Make available to inline HTML onclick
 window.loadTickets = loadTickets;
 
 
@@ -266,12 +279,23 @@ function renderTickets(tickets) {
 
     ticketList.innerHTML = tickets.map(function (ticket) {
 
-        const ticketId = escapeHTML(ticket.ticket_id);
-        const customerName = escapeHTML(ticket.customer_name);
-        const customerEmail = escapeHTML(ticket.customer_email);
-        const subject = escapeHTML(ticket.subject);
-        const description = escapeHTML(ticket.description);
-        const status = ticket.status || "Open";
+        const ticketId =
+            escapeHTML(ticket.ticket_id);
+
+        const customerName =
+            escapeHTML(ticket.customer_name);
+
+        const customerEmail =
+            escapeHTML(ticket.customer_email);
+
+        const subject =
+            escapeHTML(ticket.subject);
+
+        const description =
+            escapeHTML(ticket.description);
+
+        const status =
+            ticket.status || "Open";
 
         const encodedTicketId =
             encodeURIComponent(ticket.ticket_id);
@@ -365,9 +389,10 @@ function updateCounters(tickets) {
     const closedCount =
         document.getElementById("closedCount");
 
-    const list = Array.isArray(tickets)
-        ? tickets
-        : [];
+    const list =
+        Array.isArray(tickets)
+            ? tickets
+            : [];
 
     if (totalCount) {
         totalCount.textContent = list.length;
@@ -431,12 +456,24 @@ async function createTicket(event) {
         return;
     }
 
-    const name = nameInput.value.trim();
-    const email = emailInput.value.trim();
-    const subject = subjectInput.value.trim();
-    const description = descriptionInput.value.trim();
+    const name =
+        nameInput.value.trim();
 
-    if (!name || !email || !subject || !description) {
+    const email =
+        emailInput.value.trim();
+
+    const subject =
+        subjectInput.value.trim();
+
+    const description =
+        descriptionInput.value.trim();
+
+    if (
+        !name ||
+        !email ||
+        !subject ||
+        !description
+    ) {
         alert("Please fill all fields.");
         return;
     }
@@ -478,7 +515,9 @@ async function createTicket(event) {
             data = responseText
                 ? JSON.parse(responseText)
                 : {};
-        } catch {
+        } catch (parseError) {
+            console.error("POST JSON parse error:", parseError);
+
             data = {
                 detail: responseText
             };
@@ -525,7 +564,6 @@ async function createTicket(event) {
 }
 
 
-// IMPORTANT: make inline onsubmit="createTicket(event)" work
 window.createTicket = createTicket;
 
 
@@ -565,7 +603,8 @@ async function showDetails(ticketId) {
                 method: "GET",
                 headers: {
                     "Accept": "application/json"
-                }
+                },
+                cache: "no-store"
             }
         );
 
@@ -578,7 +617,9 @@ async function showDetails(ticketId) {
             ticket = responseText
                 ? JSON.parse(responseText)
                 : {};
-        } catch {
+        } catch (parseError) {
+            console.error("Details JSON parse error:", parseError);
+
             ticket = {
                 detail: responseText
             };
@@ -586,7 +627,7 @@ async function showDetails(ticketId) {
 
         if (!response.ok) {
             throw new Error(
-                ticket.detail || "Ticket not found"
+                ticket.detail || "Ticket not found."
             );
         }
 
@@ -764,6 +805,7 @@ function hideDetails() {
     }
 }
 
+
 window.hideDetails = hideDetails;
 
 
@@ -776,35 +818,53 @@ async function saveTicketUpdate(ticketId) {
     const decodedTicketId =
         decodeURIComponent(ticketId);
 
+    const customerNameElement =
+        document.getElementById("detail_customer_name");
+
+    const customerEmailElement =
+        document.getElementById("detail_customer_email");
+
+    const subjectElement =
+        document.getElementById("detail_subject");
+
+    const descriptionElement =
+        document.getElementById("detail_description");
+
+    const statusElement =
+        document.getElementById("detail_status");
+
+    const notesElement =
+        document.getElementById("detail_notes");
+
     const customerName =
-        document.getElementById(
-            "detail_customer_name"
-        )?.value.trim();
+        customerNameElement
+            ? customerNameElement.value.trim()
+            : "";
 
     const customerEmail =
-        document.getElementById(
-            "detail_customer_email"
-        )?.value.trim();
+        customerEmailElement
+            ? customerEmailElement.value.trim()
+            : "";
 
     const subject =
-        document.getElementById(
-            "detail_subject"
-        )?.value.trim();
+        subjectElement
+            ? subjectElement.value.trim()
+            : "";
 
     const description =
-        document.getElementById(
-            "detail_description"
-        )?.value.trim();
+        descriptionElement
+            ? descriptionElement.value.trim()
+            : "";
 
     const status =
-        document.getElementById(
-            "detail_status"
-        )?.value;
+        statusElement
+            ? statusElement.value
+            : "Open";
 
     const notes =
-        document.getElementById(
-            "detail_notes"
-        )?.value.trim();
+        notesElement
+            ? notesElement.value.trim()
+            : "";
 
     if (
         !customerName ||
@@ -817,6 +877,11 @@ async function saveTicketUpdate(ticketId) {
     }
 
     try {
+
+        console.log(
+            "PUT:",
+            `${API_BASE}/${decodedTicketId}`
+        );
 
         const response = await fetch(
             `${API_BASE}/${encodeURIComponent(decodedTicketId)}`,
@@ -846,7 +911,9 @@ async function saveTicketUpdate(ticketId) {
             data = responseText
                 ? JSON.parse(responseText)
                 : {};
-        } catch {
+        } catch (parseError) {
+            console.error("PUT JSON parse error:", parseError);
+
             data = {
                 detail: responseText
             };
@@ -860,7 +927,7 @@ async function saveTicketUpdate(ticketId) {
 
         alert("Ticket updated successfully.");
 
-        hideDetails();
+        window.hideDetails();
 
         await loadTickets();
 
@@ -979,9 +1046,20 @@ document.addEventListener(
         ticketList =
             document.getElementById("ticketList");
 
-        console.log("searchInput:", searchInput);
-        console.log("statusFilter:", statusFilter);
-        console.log("ticketList:", ticketList);
+        console.log(
+            "searchInput:",
+            searchInput
+        );
+
+        console.log(
+            "statusFilter:",
+            statusFilter
+        );
+
+        console.log(
+            "ticketList:",
+            ticketList
+        );
 
         setupFilters();
         setupKeyboard();
@@ -990,4 +1068,3 @@ document.addEventListener(
         loadTickets();
     }
 );
-```
