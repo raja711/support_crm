@@ -1,13 +1,16 @@
+```javascript
 console.log("Support CRM app.js loaded");
 
-const searchInput = document.getElementById("search");
-const statusFilter = document.getElementById("status");
-const ticketList = document.getElementById("ticketList");
+const API_BASE = "/api/tickets";
+
+let searchInput = null;
+let statusFilter = null;
+let ticketList = null;
 
 
-// ===============================
-// HELPER FUNCTIONS
-// ===============================
+// =====================================================
+// HELPERS
+// =====================================================
 
 function escapeHTML(value) {
     if (value === null || value === undefined) {
@@ -23,15 +26,15 @@ function escapeHTML(value) {
 }
 
 
-function formatDate(dateString) {
-    if (!dateString) {
+function formatDate(value) {
+    if (!value) {
         return "-";
     }
 
-    const date = new Date(dateString);
+    const date = new Date(value);
 
     if (isNaN(date.getTime())) {
-        return dateString;
+        return escapeHTML(value);
     }
 
     return date.toLocaleString();
@@ -73,119 +76,176 @@ function statusBadge(status) {
 }
 
 
-// ===============================
-// CREATE TICKET MODAL
-// ===============================
+// =====================================================
+// CREATE MODAL
+// IMPORTANT: window. is required because index.html
+// uses onclick="showCreateForm()"
+// =====================================================
 
-function showCreateForm() {
+window.showCreateForm = function () {
+    console.log("showCreateForm() called");
+
     const modal = document.getElementById("createModal");
 
-    if (modal) {
-        modal.classList.remove("hidden");
+    if (!modal) {
+        console.error("createModal not found");
+        alert("Create ticket window could not be opened.");
+        return;
     }
-}
+
+    modal.classList.remove("hidden");
+
+    const nameInput = document.getElementById("customer_name");
+
+    if (nameInput) {
+        setTimeout(function () {
+            nameInput.focus();
+        }, 100);
+    }
+};
 
 
-function hideCreateForm() {
+window.hideCreateForm = function () {
+    console.log("hideCreateForm() called");
+
     const modal = document.getElementById("createModal");
 
     if (modal) {
         modal.classList.add("hidden");
     }
-}
+};
 
 
-// Keep compatibility with existing HTML
-function showCreateModal() {
-    const modal = document.getElementById("createModal");
-
-    if (modal) {
-        modal.classList.remove("hidden");
-    }
-}
+window.showCreateModal = function () {
+    window.showCreateForm();
+};
 
 
-function hideCreateModal() {
-    const modal = document.getElementById("createModal");
-
-    if (modal) {
-        modal.classList.add("hidden");
-    }
-}
+window.hideCreateModal = function () {
+    window.hideCreateForm();
+};
 
 
-// ===============================
+// =====================================================
 // LOAD TICKETS
-// ===============================
+// =====================================================
 
 async function loadTickets() {
+    console.log("loadTickets() called");
 
     if (!ticketList) {
+        ticketList = document.getElementById("ticketList");
+    }
+
+    if (!ticketList) {
+        console.error("ticketList not found");
         return;
     }
 
     try {
+        ticketList.innerHTML = `
+            <div class="p-8 text-center text-gray-500">
+                Loading tickets...
+            </div>
+        `;
 
         const params = new URLSearchParams();
 
-        const search = searchInput?.value.trim();
-        const status = statusFilter?.value;
+        const search = searchInput
+            ? searchInput.value.trim()
+            : "";
+
+        const status = statusFilter
+            ? statusFilter.value
+            : "";
 
         if (search) {
             params.append("search", search);
         }
 
-        if (status && status !== "All") {
+        if (
+            status &&
+            status !== "All" &&
+            status !== "All Statuses"
+        ) {
             params.append("status", status);
         }
 
-        const queryString = params.toString();
+        const query = params.toString();
 
-        const url = queryString
-            ? `/api/tickets?${queryString}`
-            : `/api/tickets`;
+        const url = query
+            ? `${API_BASE}?${query}`
+            : API_BASE;
 
-        const response = await fetch(url);
+        console.log("GET:", url);
+
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        });
 
         if (!response.ok) {
-            throw new Error(`HTTP error ${response.status}`);
+            throw new Error(`HTTP ${response.status}`);
         }
 
-        const tickets = await response.json();
+        const data = await response.json();
 
-        renderTickets(tickets);
-        updateCounters(tickets);
+        console.log("Tickets received:", data);
+
+        if (!Array.isArray(data)) {
+            throw new Error("Invalid API response");
+        }
+
+        renderTickets(data);
+        updateCounters(data);
 
     } catch (error) {
-
         console.error("Load tickets error:", error);
 
         ticketList.innerHTML = `
             <div class="p-6 bg-red-50 border border-red-200 rounded-xl text-red-700">
-                <p class="font-semibold">Unable to load tickets.</p>
-                <p class="text-sm mt-1">
-                    Please refresh the page and try again.
+                <p class="font-semibold">
+                    Failed to load tickets.
                 </p>
+
+                <p class="text-sm mt-1">
+                    ${escapeHTML(error.message)}
+                </p>
+
+                <button
+                    type="button"
+                    onclick="loadTickets()"
+                    class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg"
+                >
+                    Retry
+                </button>
             </div>
         `;
+
+        updateCounters([]);
     }
 }
 
 
-// ===============================
+// Make available to inline HTML onclick
+window.loadTickets = loadTickets;
+
+
+// =====================================================
 // RENDER TICKETS
-// ===============================
+// =====================================================
 
 function renderTickets(tickets) {
-
     if (!ticketList) {
         return;
     }
 
     if (!tickets || tickets.length === 0) {
-
         ticketList.innerHTML = `
             <div class="p-8 text-center bg-white rounded-xl border border-gray-200">
+
                 <div class="text-gray-400 text-4xl mb-3">
                     🎫
                 </div>
@@ -197,14 +257,14 @@ function renderTickets(tickets) {
                 <p class="text-gray-500 text-sm mt-1">
                     Create a new ticket to get started.
                 </p>
+
             </div>
         `;
 
         return;
     }
 
-
-    ticketList.innerHTML = tickets.map(ticket => {
+    ticketList.innerHTML = tickets.map(function (ticket) {
 
         const ticketId = escapeHTML(ticket.ticket_id);
         const customerName = escapeHTML(ticket.customer_name);
@@ -215,7 +275,6 @@ function renderTickets(tickets) {
 
         const encodedTicketId =
             encodeURIComponent(ticket.ticket_id);
-
 
         return `
             <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
@@ -234,16 +293,13 @@ function renderTickets(tickets) {
 
                         </div>
 
-
                         <h3 class="text-lg font-semibold text-gray-900 mt-3">
                             ${subject}
                         </h3>
 
-
                         <p class="text-gray-600 text-sm mt-2">
                             ${description}
                         </p>
-
 
                         <div class="mt-4 space-y-1 text-sm">
 
@@ -251,19 +307,15 @@ function renderTickets(tickets) {
                                 <span class="font-medium text-gray-700">
                                     Customer:
                                 </span>
-
                                 ${customerName}
                             </p>
-
 
                             <p>
                                 <span class="font-medium text-gray-700">
                                     Email:
                                 </span>
-
                                 ${customerEmail}
                             </p>
-
 
                             <p class="text-gray-500">
                                 Created:
@@ -274,13 +326,12 @@ function renderTickets(tickets) {
 
                     </div>
 
-
-                    <div class="flex-shrink-0">
+                    <div>
 
                         <button
                             type="button"
                             onclick="showDetails('${encodedTicketId}')"
-                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                         >
                             View Details
                         </button>
@@ -296,171 +347,196 @@ function renderTickets(tickets) {
 }
 
 
-// ===============================
+// =====================================================
 // COUNTERS
-// ===============================
+// =====================================================
 
 function updateCounters(tickets) {
 
-    const totalCount = document.getElementById("totalCount");
-    const openCount = document.getElementById("openCount");
-    const progressCount = document.getElementById("progressCount");
-    const closedCount = document.getElementById("closedCount");
+    const totalCount =
+        document.getElementById("totalCount");
 
+    const openCount =
+        document.getElementById("openCount");
 
-    const total = tickets?.length || 0;
+    const progressCount =
+        document.getElementById("progressCount");
 
-    const open = tickets
-        ? tickets.filter(ticket => ticket.status === "Open").length
-        : 0;
+    const closedCount =
+        document.getElementById("closedCount");
 
-    const progress = tickets
-        ? tickets.filter(ticket => ticket.status === "In Progress").length
-        : 0;
-
-    const closed = tickets
-        ? tickets.filter(ticket => ticket.status === "Closed").length
-        : 0;
-
+    const list = Array.isArray(tickets)
+        ? tickets
+        : [];
 
     if (totalCount) {
-        totalCount.textContent = total;
+        totalCount.textContent = list.length;
     }
 
     if (openCount) {
-        openCount.textContent = open;
+        openCount.textContent =
+            list.filter(function (ticket) {
+                return ticket.status === "Open";
+            }).length;
     }
 
     if (progressCount) {
-        progressCount.textContent = progress;
+        progressCount.textContent =
+            list.filter(function (ticket) {
+                return ticket.status === "In Progress";
+            }).length;
     }
 
     if (closedCount) {
-        closedCount.textContent = closed;
+        closedCount.textContent =
+            list.filter(function (ticket) {
+                return ticket.status === "Closed";
+            }).length;
     }
 }
 
 
-// ===============================
+// =====================================================
 // CREATE TICKET
-// ===============================
+// =====================================================
 
 async function createTicket(event) {
+
+    console.log("createTicket() called");
 
     if (event) {
         event.preventDefault();
     }
 
+    const nameInput =
+        document.getElementById("customer_name");
 
-    const name =
-        document.querySelector('[name="customer_name"]')
-            ?.value.trim();
+    const emailInput =
+        document.getElementById("customer_email");
 
-    const email =
-        document.querySelector('[name="customer_email"]')
-            ?.value.trim();
+    const subjectInput =
+        document.getElementById("subject");
 
-    const subject =
-        document.querySelector('[name="subject"]')
-            ?.value.trim();
+    const descriptionInput =
+        document.getElementById("description");
 
-    const description =
-        document.querySelector('[name="description"]')
-            ?.value.trim();
-
-
-    if (!name || !email || !subject || !description) {
-
-        alert("Please fill all fields.");
-
+    if (
+        !nameInput ||
+        !emailInput ||
+        !subjectInput ||
+        !descriptionInput
+    ) {
+        console.error("Create form fields not found");
+        alert("Create ticket form is not configured correctly.");
         return;
     }
 
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const subject = subjectInput.value.trim();
+    const description = descriptionInput.value.trim();
+
+    if (!name || !email || !subject || !description) {
+        alert("Please fill all fields.");
+        return;
+    }
+
+    const submitButton =
+        document.querySelector(
+            '#createTicketForm button[type="submit"]'
+        );
+
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "Creating...";
+    }
 
     try {
 
-        const response = await fetch("/api/tickets", {
+        console.log("POST:", API_BASE);
 
+        const response = await fetch(API_BASE, {
             method: "POST",
-
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Accept": "application/json"
             },
-
             body: JSON.stringify({
-
                 customer_name: name,
-
                 customer_email: email,
-
                 subject: subject,
-
                 description: description
-
             })
-
         });
 
+        const responseText =
+            await response.text();
 
-        const data = await response.json();
+        let data = {};
 
-
-        if (!response.ok) {
-
-            console.error("Create ticket API error:", data);
-
-            alert(
-                data.detail
-                    ? JSON.stringify(data.detail)
-                    : "Failed to create ticket."
-            );
-
-            return;
+        try {
+            data = responseText
+                ? JSON.parse(responseText)
+                : {};
+        } catch {
+            data = {
+                detail: responseText
+            };
         }
 
+        console.log("Create ticket response:", data);
+
+        if (!response.ok) {
+            throw new Error(
+                data.detail || `HTTP ${response.status}`
+            );
+        }
 
         alert(
-            `Ticket ${data.ticket_id} created successfully.`
+            `${data.ticket_id || "Ticket"} created successfully.`
         );
-
 
         const form =
             document.getElementById("createTicketForm");
-
 
         if (form) {
             form.reset();
         }
 
-
-        hideCreateModal();
+        window.hideCreateForm();
 
         await loadTickets();
 
-
     } catch (error) {
 
-        console.error(
-            "Create ticket error:",
-            error
-        );
+        console.error("Create ticket error:", error);
 
         alert(
-            "Server error. Please try again."
+            `Failed to create ticket: ${error.message}`
         );
+
+    } finally {
+
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = "Create Ticket";
+        }
     }
 }
 
 
-// ===============================
-// SHOW TICKET DETAILS
-// ===============================
+// IMPORTANT: make inline onsubmit="createTicket(event)" work
+window.createTicket = createTicket;
+
+
+// =====================================================
+// SHOW DETAILS
+// =====================================================
 
 async function showDetails(ticketId) {
 
     const decodedTicketId =
         decodeURIComponent(ticketId);
-
 
     const detailsModal =
         document.getElementById("detailsModal");
@@ -468,80 +544,81 @@ async function showDetails(ticketId) {
     const ticketDetails =
         document.getElementById("ticketDetails");
 
-
     if (!detailsModal || !ticketDetails) {
+        console.error("Details modal elements not found");
         return;
     }
 
+    detailsModal.classList.remove("hidden");
 
     ticketDetails.innerHTML = `
-        <div class="p-6 text-center">
-            <p class="text-gray-500">
-                Loading ticket...
-            </p>
+        <div class="p-6 text-center text-gray-500">
+            Loading ticket...
         </div>
     `;
 
-
-    detailsModal.classList.remove("hidden");
-
-
     try {
 
-        const response =
-            await fetch(
-                `/api/tickets/${encodeURIComponent(decodedTicketId)}`
-            );
+        const response = await fetch(
+            `${API_BASE}/${encodeURIComponent(decodedTicketId)}`,
+            {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json"
+                }
+            }
+        );
 
+        const responseText =
+            await response.text();
 
-        const ticket =
-            await response.json();
+        let ticket = {};
 
+        try {
+            ticket = responseText
+                ? JSON.parse(responseText)
+                : {};
+        } catch {
+            ticket = {
+                detail: responseText
+            };
+        }
 
         if (!response.ok) {
-
             throw new Error(
                 ticket.detail || "Ticket not found"
             );
         }
-
 
         const notesText =
             Array.isArray(ticket.notes)
                 ? ticket.notes.join("\n")
                 : (ticket.notes || "");
 
-
         ticketDetails.innerHTML = `
 
             <div class="space-y-5">
 
-                <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center justify-between">
 
                     <div>
-
                         <p class="text-sm text-gray-500">
                             Ticket ID
                         </p>
 
-                        <h2 class="text-xl font-bold text-gray-900">
+                        <h2 class="text-xl font-bold">
                             ${escapeHTML(ticket.ticket_id)}
                         </h2>
-
                     </div>
 
-                    <div>
-                        ${statusBadge(ticket.status)}
-                    </div>
+                    ${statusBadge(ticket.status)}
 
                 </div>
-
 
                 <div class="grid md:grid-cols-2 gap-4">
 
                     <div>
-
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label class="block text-sm font-medium mb-1">
                             Customer Name
                         </label>
 
@@ -551,13 +628,10 @@ async function showDetails(ticketId) {
                             value="${escapeHTML(ticket.customer_name)}"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2"
                         >
-
                     </div>
 
-
                     <div>
-
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label class="block text-sm font-medium mb-1">
                             Customer Email
                         </label>
 
@@ -567,15 +641,12 @@ async function showDetails(ticketId) {
                             value="${escapeHTML(ticket.customer_email)}"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2"
                         >
-
                     </div>
 
                 </div>
 
-
                 <div>
-
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label class="block text-sm font-medium mb-1">
                         Subject
                     </label>
 
@@ -585,13 +656,10 @@ async function showDetails(ticketId) {
                         value="${escapeHTML(ticket.subject)}"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2"
                     >
-
                 </div>
 
-
                 <div>
-
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label class="block text-sm font-medium mb-1">
                         Description
                     </label>
 
@@ -600,13 +668,10 @@ async function showDetails(ticketId) {
                         rows="4"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2"
                     >${escapeHTML(ticket.description)}</textarea>
-
                 </div>
 
-
                 <div>
-
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label class="block text-sm font-medium mb-1">
                         Status
                     </label>
 
@@ -631,13 +696,10 @@ async function showDetails(ticketId) {
                         </option>
 
                     </select>
-
                 </div>
 
-
                 <div>
-
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label class="block text-sm font-medium mb-1">
                         Notes
                     </label>
 
@@ -647,47 +709,22 @@ async function showDetails(ticketId) {
                         placeholder="Add notes..."
                         class="w-full border border-gray-300 rounded-lg px-3 py-2"
                     >${escapeHTML(notesText)}</textarea>
-
                 </div>
-
-
-                <div class="grid md:grid-cols-2 gap-4 text-sm text-gray-500">
-
-                    <div>
-                        <span class="font-medium">
-                            Created:
-                        </span>
-
-                        ${formatDate(ticket.created_at)}
-                    </div>
-
-
-                    <div>
-                        <span class="font-medium">
-                            Updated:
-                        </span>
-
-                        ${formatDate(ticket.updated_at)}
-                    </div>
-
-                </div>
-
 
                 <div class="flex justify-end gap-3 pt-4">
 
                     <button
                         type="button"
                         onclick="hideDetails()"
-                        class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                        class="px-4 py-2 border rounded-lg"
                     >
                         Cancel
                     </button>
 
-
                     <button
                         type="button"
                         onclick="saveTicketUpdate('${encodeURIComponent(ticket.ticket_id)}')"
-                        class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        class="px-5 py-2 bg-blue-600 text-white rounded-lg"
                     >
                         Save Update
                     </button>
@@ -697,265 +734,25 @@ async function showDetails(ticketId) {
             </div>
         `;
 
-
     } catch (error) {
 
-        console.error(
-            "Show details error:",
-            error
-        );
-
+        console.error("Show details error:", error);
 
         ticketDetails.innerHTML = `
-            <div class="p-6">
-
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-                    ${escapeHTML(error.message)}
-                </div>
-
+            <div class="p-6 bg-red-50 text-red-700 rounded-lg">
+                ${escapeHTML(error.message)}
             </div>
         `;
     }
 }
 
 
-// ===============================
-// SAVE TICKET UPDATE
-// ===============================
+window.showDetails = showDetails;
 
-async function saveTicketUpdate(ticketId) {
 
-    const decodedTicketId =
-        decodeURIComponent(ticketId);
-
-
-    const customerName =
-        document.getElementById("detail_customer_name")
-            ?.value.trim();
-
-    const customerEmail =
-        document.getElementById("detail_customer_email")
-            ?.value.trim();
-
-    const subject =
-        document.getElementById("detail_subject")
-            ?.value.trim();
-
-    const description =
-        document.getElementById("detail_description")
-            ?.value.trim();
-
-    const status =
-        document.getElementById("detail_status")
-            ?.value;
-
-    const notes =
-        document.getElementById("detail_notes")
-            ?.value.trim();
-
-
-    if (
-        !customerName ||
-        !customerEmail ||
-        !subject ||
-        !description
-    ) {
-
-        alert("Please fill all required fields.");
-
-        return;
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                `/api/tickets/${encodeURIComponent(decodedTicketId)}`,
-                {
-
-                    method: "PUT",
-
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        customer_name: customerName,
-
-                        customer_email: customerEmail,
-
-                        subject: subject,
-
-                        description: description,
-
-                        status: status,
-
-                        notes: notes || null
-
-                    })
-
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (!response.ok) {
-
-            console.error(
-                "Update ticket API error:",
-                data
-            );
-
-            alert(
-                data.detail
-                    ? JSON.stringify(data.detail)
-                    : "Failed to update ticket."
-            );
-
-            return;
-        }
-
-
-        alert("Ticket updated successfully.");
-
-
-        hideDetails();
-
-        await loadTickets();
-
-
-    } catch (error) {
-
-        console.error(
-            "Save update error:",
-            error
-        );
-
-        alert(
-            "Server error. Please try again."
-        );
-    }
-}
-
-
-// ===============================
-// QUICK STATUS UPDATE
-// ===============================
-
-async function updateStatus(ticketId, newStatus) {
-
-    const decodedTicketId =
-        decodeURIComponent(ticketId);
-
-
-    try {
-
-        const getResponse =
-            await fetch(
-                `/api/tickets/${encodeURIComponent(decodedTicketId)}`
-            );
-
-
-        const ticket =
-            await getResponse.json();
-
-
-        if (!getResponse.ok) {
-            throw new Error(
-                ticket.detail || "Ticket not found"
-            );
-        }
-
-
-        const notesText =
-            Array.isArray(ticket.notes)
-                ? ticket.notes.join("\n")
-                : (ticket.notes || "");
-
-
-        const response =
-            await fetch(
-                `/api/tickets/${encodeURIComponent(decodedTicketId)}`,
-                {
-
-                    method: "PUT",
-
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        customer_name:
-                            ticket.customer_name,
-
-                        customer_email:
-                            ticket.customer_email,
-
-                        subject:
-                            ticket.subject,
-
-                        description:
-                            ticket.description,
-
-                        status:
-                            newStatus,
-
-                        notes:
-                            notesText || null
-
-                    })
-
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (!response.ok) {
-
-            console.error(
-                "Status update error:",
-                data
-            );
-
-            alert(
-                data.detail
-                    ? JSON.stringify(data.detail)
-                    : "Failed to update status."
-            );
-
-            return;
-        }
-
-
-        await loadTickets();
-
-
-    } catch (error) {
-
-        console.error(
-            "Update status error:",
-            error
-        );
-
-        alert(
-            "Unable to update status."
-        );
-    }
-}
-
-
-// ===============================
-// HIDE DETAILS MODAL
-// ===============================
+// =====================================================
+// HIDE DETAILS
+// =====================================================
 
 function hideDetails() {
 
@@ -967,101 +764,230 @@ function hideDetails() {
     }
 }
 
+window.hideDetails = hideDetails;
 
-// ===============================
-// SEARCH
-// ===============================
 
-if (searchInput) {
+// =====================================================
+// SAVE UPDATE
+// =====================================================
 
-    searchInput.addEventListener(
-        "input",
-        function () {
-            loadTickets();
+async function saveTicketUpdate(ticketId) {
+
+    const decodedTicketId =
+        decodeURIComponent(ticketId);
+
+    const customerName =
+        document.getElementById(
+            "detail_customer_name"
+        )?.value.trim();
+
+    const customerEmail =
+        document.getElementById(
+            "detail_customer_email"
+        )?.value.trim();
+
+    const subject =
+        document.getElementById(
+            "detail_subject"
+        )?.value.trim();
+
+    const description =
+        document.getElementById(
+            "detail_description"
+        )?.value.trim();
+
+    const status =
+        document.getElementById(
+            "detail_status"
+        )?.value;
+
+    const notes =
+        document.getElementById(
+            "detail_notes"
+        )?.value.trim();
+
+    if (
+        !customerName ||
+        !customerEmail ||
+        !subject ||
+        !description
+    ) {
+        alert("Please fill all required fields.");
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            `${API_BASE}/${encodeURIComponent(decodedTicketId)}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    customer_name: customerName,
+                    customer_email: customerEmail,
+                    subject: subject,
+                    description: description,
+                    status: status,
+                    notes: notes || null
+                })
+            }
+        );
+
+        const responseText =
+            await response.text();
+
+        let data = {};
+
+        try {
+            data = responseText
+                ? JSON.parse(responseText)
+                : {};
+        } catch {
+            data = {
+                detail: responseText
+            };
+        }
+
+        if (!response.ok) {
+            throw new Error(
+                data.detail || `HTTP ${response.status}`
+            );
+        }
+
+        alert("Ticket updated successfully.");
+
+        hideDetails();
+
+        await loadTickets();
+
+    } catch (error) {
+
+        console.error("Save update error:", error);
+
+        alert(
+            `Failed to update ticket: ${error.message}`
+        );
+    }
+}
+
+
+window.saveTicketUpdate = saveTicketUpdate;
+
+
+// =====================================================
+// FILTERS
+// =====================================================
+
+function setupFilters() {
+
+    if (searchInput) {
+        searchInput.addEventListener(
+            "input",
+            function () {
+                loadTickets();
+            }
+        );
+    }
+
+    if (statusFilter) {
+        statusFilter.addEventListener(
+            "change",
+            function () {
+                loadTickets();
+            }
+        );
+    }
+}
+
+
+// =====================================================
+// KEYBOARD
+// =====================================================
+
+function setupKeyboard() {
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (event.key === "Escape") {
+                window.hideCreateForm();
+                window.hideDetails();
+            }
+
         }
     );
 }
 
 
-// ===============================
-// STATUS FILTER
-// ===============================
+// =====================================================
+// MODAL BACKDROP
+// =====================================================
 
-if (statusFilter) {
+function setupModalBackdrop() {
 
-    statusFilter.addEventListener(
-        "change",
-        function () {
-            loadTickets();
+    document.addEventListener(
+        "click",
+        function (event) {
+
+            const createModal =
+                document.getElementById("createModal");
+
+            const detailsModal =
+                document.getElementById("detailsModal");
+
+            if (
+                createModal &&
+                event.target === createModal
+            ) {
+                window.hideCreateForm();
+            }
+
+            if (
+                detailsModal &&
+                event.target === detailsModal
+            ) {
+                window.hideDetails();
+            }
         }
     );
 }
 
 
-// ===============================
-// ESC KEY
-// ===============================
-
-document.addEventListener(
-    "keydown",
-    function (event) {
-
-        if (event.key === "Escape") {
-
-            hideCreateModal();
-
-            hideDetails();
-        }
-
-    }
-);
-
-
-// ===============================
-// MODAL BACKDROP CLICK
-// ===============================
-
-document.addEventListener(
-    "click",
-    function (event) {
-
-        const createModal =
-            document.getElementById("createModal");
-
-        const detailsModal =
-            document.getElementById("detailsModal");
-
-
-        if (
-            createModal &&
-            event.target === createModal
-        ) {
-
-            hideCreateModal();
-        }
-
-
-        if (
-            detailsModal &&
-            event.target === detailsModal
-        ) {
-
-            hideDetails();
-        }
-
-    }
-);
-
-
-// ===============================
-// PAGE LOAD
-// ===============================
+// =====================================================
+// INITIALIZE
+// =====================================================
 
 document.addEventListener(
     "DOMContentLoaded",
     function () {
 
-        loadTickets();
+        console.log(
+            "DOM loaded - initializing Support CRM"
+        );
 
+        searchInput =
+            document.getElementById("search");
+
+        statusFilter =
+            document.getElementById("status");
+
+        ticketList =
+            document.getElementById("ticketList");
+
+        console.log("searchInput:", searchInput);
+        console.log("statusFilter:", statusFilter);
+        console.log("ticketList:", ticketList);
+
+        setupFilters();
+        setupKeyboard();
+        setupModalBackdrop();
+
+        loadTickets();
     }
 );
+```
