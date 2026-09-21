@@ -6,12 +6,18 @@ from sqlalchemy.orm import Session
 from .database import get_db
 from .models import Note, Ticket
 from .schemas import TicketCreate, TicketResponse, TicketUpdate
-
 from .ai import analyze_ticket
-router = APIRouter(prefix="/api", tags=["Tickets"])
 
 
+router = APIRouter(
+    prefix="/api",
+    tags=["Tickets"]
+)
+
+
+# =========================================================
 # Create Ticket
+# =========================================================
 @router.post("/tickets", response_model=TicketResponse)
 def create_ticket(
     ticket: TicketCreate,
@@ -38,7 +44,9 @@ def create_ticket(
     return new_ticket
 
 
+# =========================================================
 # Get All Tickets
+# =========================================================
 @router.get("/tickets", response_model=list[TicketResponse])
 def get_tickets(
     status: str | None = None,
@@ -48,7 +56,9 @@ def get_tickets(
     query = db.query(Ticket)
 
     if status:
-        query = query.filter(Ticket.status == status)
+        query = query.filter(
+            Ticket.status == status
+        )
 
     if search:
         search_text = f"%{search}%"
@@ -67,15 +77,22 @@ def get_tickets(
     return tickets
 
 
+# =========================================================
 # Get Single Ticket
-@router.get("/tickets/{ticket_id}", response_model=TicketResponse)
+# =========================================================
+@router.get(
+    "/tickets/{ticket_id}",
+    response_model=TicketResponse
+)
 def get_ticket(
     ticket_id: str,
     db: Session = Depends(get_db)
 ):
     ticket = (
         db.query(Ticket)
-        .filter(Ticket.ticket_id == ticket_id)
+        .filter(
+            Ticket.ticket_id == ticket_id
+        )
         .first()
     )
 
@@ -88,8 +105,13 @@ def get_ticket(
     return ticket
 
 
+# =========================================================
 # Update Customer + Ticket
-@router.put("/tickets/{ticket_id}", response_model=TicketResponse)
+# =========================================================
+@router.put(
+    "/tickets/{ticket_id}",
+    response_model=TicketResponse
+)
 def update_ticket(
     ticket_id: str,
     ticket_data: TicketUpdate,
@@ -97,7 +119,9 @@ def update_ticket(
 ):
     ticket = (
         db.query(Ticket)
-        .filter(Ticket.ticket_id == ticket_id)
+        .filter(
+            Ticket.ticket_id == ticket_id
+        )
         .first()
     )
 
@@ -107,20 +131,29 @@ def update_ticket(
             detail="Ticket not found"
         )
 
+    # -----------------------------------------------------
     # Update Customer
+    # -----------------------------------------------------
     ticket.customer_name = ticket_data.customer_name
     ticket.customer_email = ticket_data.customer_email
 
+    # -----------------------------------------------------
     # Update Ticket
+    # -----------------------------------------------------
     ticket.subject = ticket_data.subject
     ticket.description = ticket_data.description
     ticket.status = ticket_data.status
 
+    # -----------------------------------------------------
     # Update timestamp
+    # -----------------------------------------------------
     ticket.updated_at = datetime.utcnow()
 
+    # -----------------------------------------------------
     # Add Note / Comment
+    # -----------------------------------------------------
     if ticket_data.notes and ticket_data.notes.strip():
+
         new_note = Note(
             ticket_id=ticket.id,
             note=ticket_data.notes.strip(),
@@ -133,3 +166,48 @@ def update_ticket(
     db.refresh(ticket)
 
     return ticket
+
+
+# =========================================================
+# AI Ticket Analysis
+# =========================================================
+@router.post("/tickets/{ticket_id}/ai-analysis")
+def ai_ticket_analysis(
+    ticket_id: str,
+    db: Session = Depends(get_db)
+):
+    # Find ticket
+    ticket = (
+        db.query(Ticket)
+        .filter(
+            Ticket.ticket_id == ticket_id
+        )
+        .first()
+    )
+
+    # Ticket not found
+    if not ticket:
+        raise HTTPException(
+            status_code=404,
+            detail="Ticket not found"
+        )
+
+    try:
+        # Send ticket information to AI
+        analysis = analyze_ticket(
+            subject=ticket.subject,
+            description=ticket.description
+        )
+
+        return {
+            "success": True,
+            "ticket_id": ticket.ticket_id,
+            "analysis": analysis
+        }
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"AI analysis failed: {str(e)}"
+        )
