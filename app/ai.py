@@ -5,17 +5,22 @@ from openai import OpenAI
 
 
 def analyze_ticket(subject: str, description: str):
+
     api_key = os.getenv("OPENAI_API_KEY")
 
     if not api_key:
-        raise RuntimeError("OPENAI_API_KEY is not configured")
+        raise RuntimeError(
+            "OPENAI_API_KEY is not configured"
+        )
 
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(
+        api_key=api_key
+    )
 
     prompt = f"""
 You are an AI customer support ticket analyst.
 
-Analyze the following support ticket.
+Analyze the following customer support ticket.
 
 Subject:
 {subject}
@@ -23,15 +28,21 @@ Subject:
 Description:
 {description}
 
-Return ONLY valid JSON with exactly these fields:
+Return ONLY valid JSON.
+
+Use exactly these fields:
 
 {{
-  "category": "Billing | Technical | Account | General",
-  "priority": "Low | Medium | High | Critical",
-  "sentiment": "Positive | Neutral | Negative",
-  "summary": "Short summary of the customer issue",
-  "suggested_reply": "Professional reply to the customer"
+    "category": "Billing | Technical | Account | General",
+    "priority": "Low | Medium | High | Critical",
+    "sentiment": "Positive | Neutral | Negative",
+    "summary": "Short summary of the customer issue",
+    "suggested_reply": "Professional reply to the customer"
 }}
+
+Do not add markdown.
+Do not add ```json.
+Return only JSON.
 """
 
     response = client.responses.create(
@@ -41,7 +52,19 @@ Return ONLY valid JSON with exactly these fields:
 
     result = response.output_text.strip()
 
+    # Remove accidental markdown if AI returns it
+    if result.startswith("```json"):
+        result = result[7:]
+
+    if result.endswith("```"):
+        result = result[:-3]
+
+    result = result.strip()
+
     try:
         return json.loads(result)
+
     except json.JSONDecodeError:
-        raise RuntimeError("AI returned an invalid response")
+        raise RuntimeError(
+            "AI returned invalid JSON"
+        )
