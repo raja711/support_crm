@@ -1,19 +1,20 @@
 import json
 import os
 
-from openai import OpenAI
+from google import genai
+from google.genai import types
 
 
 def analyze_ticket(subject: str, description: str):
 
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY")
 
     if not api_key:
         raise RuntimeError(
-            "OPENAI_API_KEY is not configured"
+            "GEMINI_API_KEY is not configured"
         )
 
-    client = OpenAI(
+    client = genai.Client(
         api_key=api_key
     )
 
@@ -28,7 +29,7 @@ Subject:
 Description:
 {description}
 
-Return ONLY valid JSON.
+Return ONLY a valid JSON object.
 
 Use exactly these fields:
 
@@ -40,31 +41,58 @@ Use exactly these fields:
     "suggested_reply": "Professional reply to the customer"
 }}
 
-Do not add markdown.
-Do not add ```json.
-Return only JSON.
+Rules:
+
+1. category must be exactly one of:
+Billing, Technical, Account, General
+
+2. priority must be exactly one of:
+Low, Medium, High, Critical
+
+3. sentiment must be exactly one of:
+Positive, Neutral, Negative
+
+4. summary must be short and clear.
+
+5. suggested_reply must be professional, helpful,
+and suitable for sending to the customer.
+
+6. Do not add markdown.
+
+7. Do not add ```json.
+
+8. Return only the JSON object.
 """
 
-    response = client.responses.create(
-        model="gpt-5.6-luna",
-        input=prompt
-    )
-
-    result = response.output_text.strip()
-
-    # Remove accidental markdown if AI returns it
-    if result.startswith("```json"):
-        result = result[7:]
-
-    if result.endswith("```"):
-        result = result[:-3]
-
-    result = result.strip()
-
     try:
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json"
+            )
+        )
+
+        result = response.text.strip()
+
+        # Remove accidental markdown if returned
+        if result.startswith("```json"):
+            result = result[7:]
+
+        if result.endswith("```"):
+            result = result[:-3]
+
+        result = result.strip()
+
         return json.loads(result)
 
     except json.JSONDecodeError:
         raise RuntimeError(
-            "AI returned invalid JSON"
+            "Gemini returned invalid JSON"
+        )
+
+    except Exception as e:
+        raise RuntimeError(
+            f"Gemini AI request failed: {str(e)}"
         )
