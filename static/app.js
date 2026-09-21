@@ -26,6 +26,7 @@ function escapeHTML(value) {
 
 
 function formatDate(value) {
+
     if (!value) {
         return "-";
     }
@@ -41,6 +42,7 @@ function formatDate(value) {
 
 
 function statusBadge(status) {
+
     const value = status || "Open";
 
     if (value === "Open") {
@@ -80,13 +82,22 @@ function statusBadge(status) {
 // =====================================================
 
 window.showCreateForm = function () {
+
     console.log("showCreateForm() called");
 
-    const modal = document.getElementById("createModal");
+    const modal =
+        document.getElementById("createModal");
 
     if (!modal) {
-        console.error("createModal not found");
-        alert("Create ticket window could not be opened.");
+
+        console.error(
+            "createModal not found"
+        );
+
+        alert(
+            "Create ticket window could not be opened."
+        );
+
         return;
     }
 
@@ -96,6 +107,7 @@ window.showCreateForm = function () {
         document.getElementById("customer_name");
 
     if (nameInput) {
+
         setTimeout(function () {
             nameInput.focus();
         }, 100);
@@ -104,6 +116,7 @@ window.showCreateForm = function () {
 
 
 window.hideCreateForm = function () {
+
     console.log("hideCreateForm() called");
 
     const modal =
@@ -130,15 +143,21 @@ window.hideCreateModal = function () {
 // =====================================================
 
 async function loadTickets() {
+
     console.log("loadTickets() called");
 
     if (!ticketList) {
+
         ticketList =
             document.getElementById("ticketList");
     }
 
     if (!ticketList) {
-        console.error("ticketList not found");
+
+        console.error(
+            "ticketList not found"
+        );
+
         return;
     }
 
@@ -150,15 +169,18 @@ async function loadTickets() {
             </div>
         `;
 
-        const params = new URLSearchParams();
+        const params =
+            new URLSearchParams();
 
-        const search = searchInput
-            ? searchInput.value.trim()
-            : "";
+        const search =
+            searchInput
+                ? searchInput.value.trim()
+                : "";
 
-        const status = statusFilter
-            ? statusFilter.value
-            : "";
+        const status =
+            statusFilter
+                ? statusFilter.value
+                : "";
 
         if (search) {
             params.set("search", search);
@@ -169,24 +191,40 @@ async function loadTickets() {
             status !== "All" &&
             status !== "All Statuses"
         ) {
-            params.set("status", status);
+
+            params.set(
+                "status",
+                status
+            );
         }
 
-        const query = params.toString();
+        const query =
+            params.toString();
 
-        const url = query
-            ? `${API_BASE}?${query}`
-            : API_BASE;
+        const url =
+            query
+                ? `${API_BASE}?${query}`
+                : API_BASE;
 
-        console.log("GET:", url);
+        console.log(
+            "GET:",
+            url
+        );
 
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            },
-            cache: "no-store"
-        });
+        const response =
+            await fetch(
+                url,
+                {
+                    method: "GET",
+
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    },
+
+                    cache: "no-store"
+                }
+            );
 
         const responseText =
             await response.text();
@@ -194,10 +232,14 @@ async function loadTickets() {
         let data;
 
         try {
-            data = responseText
-                ? JSON.parse(responseText)
-                : [];
+
+            data =
+                responseText
+                    ? JSON.parse(responseText)
+                    : [];
+
         } catch (parseError) {
+
             console.error(
                 "JSON parse error:",
                 parseError
@@ -218,18 +260,20 @@ async function loadTickets() {
             throw new Error(message);
         }
 
-        console.log(
-            "Tickets received:",
-            data
-        );
-
         if (!Array.isArray(data)) {
+
             throw new Error(
                 "Invalid API response."
             );
         }
 
+        console.log(
+            "Tickets received:",
+            data
+        );
+
         renderTickets(data);
+
         updateCounters(data);
 
     } catch (error) {
@@ -240,6 +284,7 @@ async function loadTickets() {
         );
 
         ticketList.innerHTML = `
+
             <div class="p-6 bg-red-50 border border-red-200 rounded-xl text-red-700">
 
                 <p class="font-semibold">
@@ -266,7 +311,8 @@ async function loadTickets() {
 }
 
 
-window.loadTickets = loadTickets;
+window.loadTickets =
+    loadTickets;
 
 
 // =====================================================
@@ -279,9 +325,13 @@ function renderTickets(tickets) {
         return;
     }
 
-    if (!tickets || tickets.length === 0) {
+    if (
+        !tickets ||
+        tickets.length === 0
+    ) {
 
         ticketList.innerHTML = `
+
             <div class="p-8 text-center bg-white rounded-xl border border-gray-200">
 
                 <div class="text-gray-400 text-4xl mb-3">
@@ -303,99 +353,114 @@ function renderTickets(tickets) {
     }
 
     ticketList.innerHTML =
-        tickets.map(function (ticket) {
+        tickets
+            .map(function (ticket) {
 
-            const ticketId =
-                escapeHTML(ticket.ticket_id);
+                const ticketId =
+                    escapeHTML(
+                        ticket.ticket_id
+                    );
 
-            const customerName =
-                escapeHTML(ticket.customer_name);
+                const customerName =
+                    escapeHTML(
+                        ticket.customer_name
+                    );
 
-            const customerEmail =
-                escapeHTML(ticket.customer_email);
+                const customerEmail =
+                    escapeHTML(
+                        ticket.customer_email
+                    );
 
-            const subject =
-                escapeHTML(ticket.subject);
+                const subject =
+                    escapeHTML(
+                        ticket.subject
+                    );
 
-            const description =
-                escapeHTML(ticket.description);
+                const description =
+                    escapeHTML(
+                        ticket.description
+                    );
 
-            const status =
-                ticket.status || "Open";
+                const status =
+                    ticket.status || "Open";
 
-            const encodedTicketId =
-                encodeURIComponent(
-                    ticket.ticket_id
-                );
+                const encodedTicketId =
+                    encodeURIComponent(
+                        ticket.ticket_id
+                    );
 
-            return `
-                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
+                return `
 
-                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
 
-                        <div class="flex-1">
+                        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
 
-                            <div class="flex items-center gap-3 flex-wrap">
+                            <div class="flex-1">
 
-                                <span class="font-bold text-gray-900">
-                                    ${ticketId}
-                                </span>
+                                <div class="flex items-center gap-3 flex-wrap">
 
-                                ${statusBadge(status)}
+                                    <span class="font-bold text-gray-900">
+                                        ${ticketId}
+                                    </span>
+
+                                    ${statusBadge(status)}
+
+                                </div>
+
+                                <h3 class="text-lg font-semibold text-gray-900 mt-3">
+                                    ${subject}
+                                </h3>
+
+                                <p class="text-gray-600 text-sm mt-2">
+                                    ${description}
+                                </p>
+
+                                <div class="mt-4 space-y-1 text-sm">
+
+                                    <p>
+                                        <span class="font-medium text-gray-700">
+                                            Customer:
+                                        </span>
+                                        ${customerName}
+                                    </p>
+
+                                    <p>
+                                        <span class="font-medium text-gray-700">
+                                            Email:
+                                        </span>
+                                        ${customerEmail}
+                                    </p>
+
+                                    <p class="text-gray-500">
+                                        Created:
+                                        ${formatDate(
+                                            ticket.created_at
+                                        )}
+                                    </p>
+
+                                </div>
 
                             </div>
 
-                            <h3 class="text-lg font-semibold text-gray-900 mt-3">
-                                ${subject}
-                            </h3>
+                            <div>
 
-                            <p class="text-gray-600 text-sm mt-2">
-                                ${description}
-                            </p>
-
-                            <div class="mt-4 space-y-1 text-sm">
-
-                                <p>
-                                    <span class="font-medium text-gray-700">
-                                        Customer:
-                                    </span>
-                                    ${customerName}
-                                </p>
-
-                                <p>
-                                    <span class="font-medium text-gray-700">
-                                        Email:
-                                    </span>
-                                    ${customerEmail}
-                                </p>
-
-                                <p class="text-gray-500">
-                                    Created:
-                                    ${formatDate(ticket.created_at)}
-                                </p>
+                                <button
+                                    type="button"
+                                    onclick="showDetails('${encodedTicketId}')"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                >
+                                    View Details
+                                </button>
 
                             </div>
-
-                        </div>
-
-                        <div>
-
-                            <button
-                                type="button"
-                                onclick="showDetails('${encodedTicketId}')"
-                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                            >
-                                View Details
-                            </button>
 
                         </div>
 
                     </div>
+                `;
 
-                </div>
-            `;
-
-        }).join("");
+            })
+            .join("");
 }
 
 
@@ -406,16 +471,24 @@ function renderTickets(tickets) {
 function updateCounters(tickets) {
 
     const totalCount =
-        document.getElementById("totalCount");
+        document.getElementById(
+            "totalCount"
+        );
 
     const openCount =
-        document.getElementById("openCount");
+        document.getElementById(
+            "openCount"
+        );
 
     const progressCount =
-        document.getElementById("progressCount");
+        document.getElementById(
+            "progressCount"
+        );
 
     const closedCount =
-        document.getElementById("closedCount");
+        document.getElementById(
+            "closedCount"
+        );
 
     const list =
         Array.isArray(tickets)
@@ -423,29 +496,50 @@ function updateCounters(tickets) {
             : [];
 
     if (totalCount) {
+
         totalCount.textContent =
             list.length;
     }
 
     if (openCount) {
+
         openCount.textContent =
-            list.filter(function (ticket) {
-                return ticket.status === "Open";
-            }).length;
+            list.filter(
+                function (ticket) {
+
+                    return (
+                        ticket.status === "Open"
+                    );
+                }
+            ).length;
     }
 
     if (progressCount) {
+
         progressCount.textContent =
-            list.filter(function (ticket) {
-                return ticket.status === "In Progress";
-            }).length;
+            list.filter(
+                function (ticket) {
+
+                    return (
+                        ticket.status ===
+                        "In Progress"
+                    );
+                }
+            ).length;
     }
 
     if (closedCount) {
+
         closedCount.textContent =
-            list.filter(function (ticket) {
-                return ticket.status === "Closed";
-            }).length;
+            list.filter(
+                function (ticket) {
+
+                    return (
+                        ticket.status ===
+                        "Closed"
+                    );
+                }
+            ).length;
     }
 }
 
@@ -456,23 +550,33 @@ function updateCounters(tickets) {
 
 async function createTicket(event) {
 
-    console.log("createTicket() called");
+    console.log(
+        "createTicket() called"
+    );
 
     if (event) {
         event.preventDefault();
     }
 
     const nameInput =
-        document.getElementById("customer_name");
+        document.getElementById(
+            "customer_name"
+        );
 
     const emailInput =
-        document.getElementById("customer_email");
+        document.getElementById(
+            "customer_email"
+        );
 
     const subjectInput =
-        document.getElementById("subject");
+        document.getElementById(
+            "subject"
+        );
 
     const descriptionInput =
-        document.getElementById("description");
+        document.getElementById(
+            "description"
+        );
 
     if (
         !nameInput ||
@@ -480,6 +584,7 @@ async function createTicket(event) {
         !subjectInput ||
         !descriptionInput
     ) {
+
         console.error(
             "Create form fields not found"
         );
@@ -509,6 +614,7 @@ async function createTicket(event) {
         !subject ||
         !description
     ) {
+
         alert(
             "Please fill all fields."
         );
@@ -522,34 +628,47 @@ async function createTicket(event) {
         );
 
     if (submitButton) {
-        submitButton.disabled = true;
+
+        submitButton.disabled =
+            true;
+
         submitButton.textContent =
             "Creating...";
     }
 
     try {
 
-        console.log(
-            "POST:",
-            API_BASE
-        );
-
         const response =
-            await fetch(API_BASE, {
-                method: "POST",
-                headers: {
-                    "Content-Type":
-                        "application/json",
-                    "Accept":
-                        "application/json"
-                },
-                body: JSON.stringify({
-                    customer_name: name,
-                    customer_email: email,
-                    subject: subject,
-                    description: description
-                })
-            });
+            await fetch(
+                API_BASE,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+
+                        "Accept":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            customer_name:
+                                name,
+
+                            customer_email:
+                                email,
+
+                            subject:
+                                subject,
+
+                            description:
+                                description
+                        })
+                }
+            );
 
         const responseText =
             await response.text();
@@ -558,26 +677,18 @@ async function createTicket(event) {
 
         try {
 
-            data = responseText
-                ? JSON.parse(responseText)
-                : {};
+            data =
+                responseText
+                    ? JSON.parse(responseText)
+                    : {};
 
         } catch (parseError) {
 
-            console.error(
-                "POST JSON parse error:",
-                parseError
-            );
-
             data = {
-                detail: responseText
+                detail:
+                    responseText
             };
         }
-
-        console.log(
-            "Create ticket response:",
-            data
-        );
 
         if (!response.ok) {
 
@@ -619,7 +730,8 @@ async function createTicket(event) {
 
         if (submitButton) {
 
-            submitButton.disabled = false;
+            submitButton.disabled =
+                false;
 
             submitButton.textContent =
                 "Create Ticket";
@@ -628,7 +740,8 @@ async function createTicket(event) {
 }
 
 
-window.createTicket = createTicket;
+window.createTicket =
+    createTicket;
 
 
 // =====================================================
@@ -654,6 +767,7 @@ async function showDetails(ticketId) {
         !detailsModal ||
         !ticketDetails
     ) {
+
         console.error(
             "Details modal elements not found"
         );
@@ -666,8 +780,11 @@ async function showDetails(ticketId) {
     );
 
     ticketDetails.innerHTML = `
+
         <div class="p-6 text-center text-gray-500">
+
             Loading ticket...
+
         </div>
     `;
 
@@ -678,10 +795,12 @@ async function showDetails(ticketId) {
                 `${API_BASE}/${encodeURIComponent(decodedTicketId)}`,
                 {
                     method: "GET",
+
                     headers: {
                         "Accept":
                             "application/json"
                     },
+
                     cache: "no-store"
                 }
             );
@@ -693,20 +812,16 @@ async function showDetails(ticketId) {
 
         try {
 
-            ticket = responseText
-                ? JSON.parse(responseText)
-                : {};
+            ticket =
+                responseText
+                    ? JSON.parse(responseText)
+                    : {};
 
         } catch (parseError) {
 
-            console.error(
-                "Details JSON parse error:",
-                parseError
+            throw new Error(
+                "Invalid ticket response."
             );
-
-            ticket = {
-                detail: responseText
-            };
         }
 
         if (!response.ok) {
@@ -718,28 +833,48 @@ async function showDetails(ticketId) {
         }
 
 
-        // -------------------------------------------------
-        // FIX NOTES
-        // Backend returns notes as objects.
-        // -------------------------------------------------
+        // =================================================
+        // NOTES
+        // =================================================
 
         const notesText =
             Array.isArray(ticket.notes)
+
                 ? ticket.notes
                     .map(function (note) {
-                        return note.note || "";
+
+                        if (
+                            typeof note ===
+                            "object"
+                        ) {
+
+                            return (
+                                note.note ||
+                                ""
+                            );
+                        }
+
+                        return String(note);
                     })
                     .filter(Boolean)
                     .join("\n")
+
                 : (
                     ticket.notes ||
                     ""
                 );
 
 
+        // =================================================
+        // DETAILS HTML
+        // =================================================
+
         ticketDetails.innerHTML = `
 
             <div class="space-y-5">
+
+
+                <!-- HEADER -->
 
                 <div class="flex items-center justify-between">
 
@@ -750,19 +885,24 @@ async function showDetails(ticketId) {
                         </p>
 
                         <h2 class="text-xl font-bold">
-                            ${escapeHTML(ticket.ticket_id)}
+                            ${escapeHTML(
+                                ticket.ticket_id
+                            )}
                         </h2>
 
                     </div>
 
-                    ${statusBadge(ticket.status)}
+                    ${statusBadge(
+                        ticket.status
+                    )}
 
                 </div>
 
 
-                <!-- Customer -->
+                <!-- CUSTOMER -->
 
                 <div class="grid md:grid-cols-2 gap-4">
+
 
                     <div>
 
@@ -773,7 +913,9 @@ async function showDetails(ticketId) {
                         <input
                             id="detail_customer_name"
                             type="text"
-                            value="${escapeHTML(ticket.customer_name)}"
+                            value="${escapeHTML(
+                                ticket.customer_name
+                            )}"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2"
                         >
 
@@ -789,7 +931,9 @@ async function showDetails(ticketId) {
                         <input
                             id="detail_customer_email"
                             type="email"
-                            value="${escapeHTML(ticket.customer_email)}"
+                            value="${escapeHTML(
+                                ticket.customer_email
+                            )}"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2"
                         >
 
@@ -798,7 +942,7 @@ async function showDetails(ticketId) {
                 </div>
 
 
-                <!-- Subject -->
+                <!-- SUBJECT -->
 
                 <div>
 
@@ -809,14 +953,16 @@ async function showDetails(ticketId) {
                     <input
                         id="detail_subject"
                         type="text"
-                        value="${escapeHTML(ticket.subject)}"
+                        value="${escapeHTML(
+                            ticket.subject
+                        )}"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2"
                     >
 
                 </div>
 
 
-                <!-- Description -->
+                <!-- DESCRIPTION -->
 
                 <div>
 
@@ -828,12 +974,14 @@ async function showDetails(ticketId) {
                         id="detail_description"
                         rows="4"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    >${escapeHTML(ticket.description)}</textarea>
+                    >${escapeHTML(
+                        ticket.description
+                    )}</textarea>
 
                 </div>
 
 
-                <!-- Status -->
+                <!-- STATUS -->
 
                 <div>
 
@@ -848,21 +996,36 @@ async function showDetails(ticketId) {
 
                         <option
                             value="Open"
-                            ${ticket.status === "Open" ? "selected" : ""}
+                            ${
+                                ticket.status ===
+                                "Open"
+                                    ? "selected"
+                                    : ""
+                            }
                         >
                             Open
                         </option>
 
                         <option
                             value="In Progress"
-                            ${ticket.status === "In Progress" ? "selected" : ""}
+                            ${
+                                ticket.status ===
+                                "In Progress"
+                                    ? "selected"
+                                    : ""
+                            }
                         >
                             In Progress
                         </option>
 
                         <option
                             value="Closed"
-                            ${ticket.status === "Closed" ? "selected" : ""}
+                            ${
+                                ticket.status ===
+                                "Closed"
+                                    ? "selected"
+                                    : ""
+                            }
                         >
                             Closed
                         </option>
@@ -872,7 +1035,7 @@ async function showDetails(ticketId) {
                 </div>
 
 
-                <!-- Notes -->
+                <!-- NOTES -->
 
                 <div>
 
@@ -885,7 +1048,9 @@ async function showDetails(ticketId) {
                         rows="4"
                         placeholder="Add notes..."
                         class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    >${escapeHTML(notesText)}</textarea>
+                    >${escapeHTML(
+                        notesText
+                    )}</textarea>
 
                 </div>
 
@@ -903,758 +1068,5 @@ async function showDetails(ticketId) {
 
                 <div class="flex flex-col sm:flex-row justify-end gap-3 pt-4">
 
-                    <button
-                        type="button"
-                        onclick="analyzeTicket('${encodeURIComponent(ticket.ticket_id)}')"
-                        class="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-                    >
-                        🤖 Analyze with AI
-                    </button>
 
-
-                    <button
-                        type="button"
-                        onclick="hideDetails()"
-                        class="px-4 py-2 border rounded-lg hover:bg-gray-50"
-                    >
-                        Cancel
-                    </button>
-
-
-                    <button
-                        type="button"
-                        onclick="saveTicketUpdate('${encodeURIComponent(ticket.ticket_id)}')"
-                        class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                        Save Update
-                    </button>
-
-                </div>
-
-            </div>
-        `;
-
-    } catch (error) {
-
-        console.error(
-            "Show details error:",
-            error
-        );
-
-        ticketDetails.innerHTML = `
-            <div class="p-6 bg-red-50 text-red-700 rounded-lg">
-
-                ${escapeHTML(error.message)}
-
-            </div>
-        `;
-    }
-}
-
-
-window.showDetails = showDetails;
-
-
-// =====================================================
-// AI TICKET ANALYSIS
-// =====================================================
-
-async function analyzeTicket(ticketId) {
-
-    const decodedTicketId =
-        decodeURIComponent(ticketId);
-
-    const aiBox =
-        document.getElementById(
-            "aiAnalysis"
-        );
-
-    if (!aiBox) {
-
-        console.error(
-            "AI analysis container not found"
-        );
-
-        return;
-    }
-
-
-    // Loading state
-
-    aiBox.innerHTML = `
-
-        <div class="p-5 bg-purple-50 border border-purple-200 rounded-xl">
-
-            <div class="flex items-center gap-3">
-
-                <div class="text-2xl">
-                    🤖
-                </div>
-
-                <div>
-
-                    <p class="font-semibold text-purple-700">
-                        AI is analyzing this ticket...
-                    </p>
-
-                    <p class="text-sm text-purple-500 mt-1">
-                        Please wait a moment.
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-    `;
-
-
-    try {
-
-        console.log(
-            "AI analysis:",
-            decodedTicketId
-        );
-
-
-        const response =
-            await fetch(
-                `${API_BASE}/${encodeURIComponent(decodedTicketId)}/ai-analysis`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Accept":
-                            "application/json"
-                    }
-                }
-            );
-
-
-        const responseText =
-            await response.text();
-
-
-        let data = {};
-
-        try {
-
-            data = responseText
-                ? JSON.parse(responseText)
-                : {};
-
-        } catch (parseError) {
-
-            console.error(
-                "AI JSON parse error:",
-                parseError
-            );
-
-            throw new Error(
-                "Invalid response from AI server."
-            );
-        }
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                data.detail ||
-                `HTTP ${response.status}`
-            );
-        }
-
-
-        if (
-            !data.analysis ||
-            typeof data.analysis !== "object"
-        ) {
-
-            throw new Error(
-                "AI returned an invalid analysis."
-            );
-        }
-
-
-        const analysis =
-            data.analysis;
-
-
-        aiBox.innerHTML = `
-
-            <div class="p-5 bg-purple-50 border border-purple-200 rounded-xl">
-
-                <div class="flex items-center justify-between mb-4">
-
-                    <h3 class="text-lg font-bold text-purple-700">
-                        🤖 AI Ticket Analysis
-                    </h3>
-
-                    <span class="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
-                        AI Powered
-                    </span>
-
-                </div>
-
-
-                <!-- AI Classification -->
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-
-
-                    <!-- Category -->
-
-                    <div class="bg-white p-4 rounded-lg border">
-
-                        <p class="text-xs text-gray-500 uppercase">
-                            Category
-                        </p>
-
-                        <p class="font-semibold text-gray-800 mt-1">
-                            ${escapeHTML(analysis.category)}
-                        </p>
-
-                    </div>
-
-
-                    <!-- Priority -->
-
-                    <div class="bg-white p-4 rounded-lg border">
-
-                        <p class="text-xs text-gray-500 uppercase">
-                            Priority
-                        </p>
-
-                        <p class="font-semibold text-gray-800 mt-1">
-                            ${escapeHTML(analysis.priority)}
-                        </p>
-
-                    </div>
-
-
-                    <!-- Sentiment -->
-
-                    <div class="bg-white p-4 rounded-lg border">
-
-                        <p class="text-xs text-gray-500 uppercase">
-                            Sentiment
-                        </p>
-
-                        <p class="font-semibold text-gray-800 mt-1">
-                            ${escapeHTML(analysis.sentiment)}
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <!-- Summary -->
-
-                <div class="bg-white p-4 rounded-lg border mt-3">
-
-                    <p class="font-semibold text-gray-800 mb-2">
-                        📝 AI Summary
-                    </p>
-
-                    <p class="text-gray-700 text-sm leading-6">
-                        ${escapeHTML(analysis.summary)}
-                    </p>
-
-                </div>
-
-
-                <!-- Suggested Reply -->
-
-                <div class="bg-white p-4 rounded-lg border mt-3">
-
-                    <div class="flex items-center justify-between gap-3 mb-2">
-
-                        <p class="font-semibold text-gray-800">
-                            💬 Suggested Customer Reply
-                        </p>
-
-                        <button
-                            type="button"
-                            onclick="copyAIReply()"
-                            class="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg"
-                        >
-                            Copy
-                        </button>
-
-                    </div>
-
-                    <p
-                        id="aiSuggestedReply"
-                        class="text-gray-700 text-sm leading-6"
-                    >
-                        ${escapeHTML(analysis.suggested_reply)}
-                    </p>
-
-                </div>
-
-            </div>
-        `;
-
-
-        // Save reply in memory for Copy button
-        window.currentAISuggestedReply =
-            analysis.suggested_reply || "";
-
-
-    } catch (error) {
-
-        console.error(
-            "AI analysis error:",
-            error
-        );
-
-
-        aiBox.innerHTML = `
-
-            <div class="p-5 bg-red-50 border border-red-200 rounded-xl">
-
-                <p class="font-semibold text-red-700">
-                    ❌ AI Analysis Failed
-                </p>
-
-                <p class="text-sm text-red-600 mt-2">
-                    ${escapeHTML(error.message)}
-                </p>
-
-                <button
-                    type="button"
-                    onclick="analyzeTicket('${encodeURIComponent(decodedTicketId)}')"
-                    class="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                >
-                    Try Again
-                </button>
-
-            </div>
-        `;
-    }
-}
-
-
-window.analyzeTicket = analyzeTicket;
-
-
-// =====================================================
-// COPY AI REPLY
-// =====================================================
-
-async function copyAIReply() {
-
-    const reply =
-        window.currentAISuggestedReply || "";
-
-
-    if (!reply) {
-
-        alert(
-            "No AI reply available."
-        );
-
-        return;
-    }
-
-
-    try {
-
-        await navigator.clipboard.writeText(
-            reply
-        );
-
-        alert(
-            "AI reply copied to clipboard."
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Copy failed:",
-            error
-        );
-
-        alert(
-            "Could not copy the reply."
-        );
-    }
-}
-
-
-window.copyAIReply = copyAIReply;
-
-
-// =====================================================
-// HIDE DETAILS
-// =====================================================
-
-function hideDetails() {
-
-    const modal =
-        document.getElementById(
-            "detailsModal"
-        );
-
-    if (modal) {
-        modal.classList.add(
-            "hidden"
-        );
-    }
-}
-
-
-window.hideDetails = hideDetails;
-
-
-// =====================================================
-// SAVE UPDATE
-// =====================================================
-
-async function saveTicketUpdate(ticketId) {
-
-    const decodedTicketId =
-        decodeURIComponent(ticketId);
-
-
-    const customerNameElement =
-        document.getElementById(
-            "detail_customer_name"
-        );
-
-    const customerEmailElement =
-        document.getElementById(
-            "detail_customer_email"
-        );
-
-    const subjectElement =
-        document.getElementById(
-            "detail_subject"
-        );
-
-    const descriptionElement =
-        document.getElementById(
-            "detail_description"
-        );
-
-    const statusElement =
-        document.getElementById(
-            "detail_status"
-        );
-
-    const notesElement =
-        document.getElementById(
-            "detail_notes"
-        );
-
-
-    const customerName =
-        customerNameElement
-            ? customerNameElement.value.trim()
-            : "";
-
-
-    const customerEmail =
-        customerEmailElement
-            ? customerEmailElement.value.trim()
-            : "";
-
-
-    const subject =
-        subjectElement
-            ? subjectElement.value.trim()
-            : "";
-
-
-    const description =
-        descriptionElement
-            ? descriptionElement.value.trim()
-            : "";
-
-
-    const status =
-        statusElement
-            ? statusElement.value
-            : "Open";
-
-
-    const notes =
-        notesElement
-            ? notesElement.value.trim()
-            : "";
-
-
-    if (
-        !customerName ||
-        !customerEmail ||
-        !subject ||
-        !description
-    ) {
-
-        alert(
-            "Please fill all required fields."
-        );
-
-        return;
-    }
-
-
-    try {
-
-        console.log(
-            "PUT:",
-            `${API_BASE}/${decodedTicketId}`
-        );
-
-
-        const response =
-            await fetch(
-                `${API_BASE}/${encodeURIComponent(decodedTicketId)}`,
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-                        "Accept":
-                            "application/json"
-                    },
-                    body: JSON.stringify({
-
-                        customer_name:
-                            customerName,
-
-                        customer_email:
-                            customerEmail,
-
-                        subject:
-                            subject,
-
-                        description:
-                            description,
-
-                        status:
-                            status,
-
-                        notes:
-                            notes || null
-                    })
-                }
-            );
-
-
-        const responseText =
-            await response.text();
-
-
-        let data = {};
-
-
-        try {
-
-            data = responseText
-                ? JSON.parse(responseText)
-                : {};
-
-        } catch (parseError) {
-
-            console.error(
-                "PUT JSON parse error:",
-                parseError
-            );
-
-            data = {
-                detail: responseText
-            };
-        }
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                data.detail ||
-                `HTTP ${response.status}`
-            );
-        }
-
-
-        alert(
-            "Ticket updated successfully."
-        );
-
-
-        window.hideDetails();
-
-
-        await loadTickets();
-
-
-    } catch (error) {
-
-        console.error(
-            "Save update error:",
-            error
-        );
-
-        alert(
-            `Failed to update ticket: ${error.message}`
-        );
-    }
-}
-
-
-window.saveTicketUpdate =
-    saveTicketUpdate;
-
-
-// =====================================================
-// FILTERS
-// =====================================================
-
-function setupFilters() {
-
-    if (searchInput) {
-
-        searchInput.addEventListener(
-            "input",
-            function () {
-                loadTickets();
-            }
-        );
-    }
-
-
-    if (statusFilter) {
-
-        statusFilter.addEventListener(
-            "change",
-            function () {
-                loadTickets();
-            }
-        );
-    }
-}
-
-
-// =====================================================
-// KEYBOARD
-// =====================================================
-
-function setupKeyboard() {
-
-    document.addEventListener(
-        "keydown",
-        function (event) {
-
-            if (event.key === "Escape") {
-
-                window.hideCreateForm();
-                window.hideDetails();
-            }
-
-        }
-    );
-}
-
-
-// =====================================================
-// MODAL BACKDROP
-// =====================================================
-
-function setupModalBackdrop() {
-
-    document.addEventListener(
-        "click",
-        function (event) {
-
-            const createModal =
-                document.getElementById(
-                    "createModal"
-                );
-
-            const detailsModal =
-                document.getElementById(
-                    "detailsModal"
-                );
-
-
-            if (
-                createModal &&
-                event.target === createModal
-            ) {
-
-                window.hideCreateForm();
-            }
-
-
-            if (
-                detailsModal &&
-                event.target === detailsModal
-            ) {
-
-                window.hideDetails();
-            }
-
-        }
-    );
-}
-
-
-// =====================================================
-// INITIALIZE
-// =====================================================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        console.log(
-            "DOM loaded - initializing Support CRM"
-        );
-
-
-        searchInput =
-            document.getElementById(
-                "search"
-            );
-
-
-        statusFilter =
-            document.getElementById(
-                "status"
-            );
-
-
-        ticketList =
-            document.getElementById(
-                "ticketList"
-            );
-
-
-        console.log(
-            "searchInput:",
-            searchInput
-        );
-
-
-        console.log(
-            "statusFilter:",
-            statusFilter
-        );
-
-
-        console.log(
-            "ticketList:",
-            ticketList
-        );
-
-
-        setupFilters();
-
-        setupKeyboard();
-
-        setupModalBackdrop();
-
-        loadTickets();
-
-    }
-);
+                    <!--
