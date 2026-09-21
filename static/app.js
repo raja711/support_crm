@@ -92,7 +92,8 @@ window.showCreateForm = function () {
 
     modal.classList.remove("hidden");
 
-    const nameInput = document.getElementById("customer_name");
+    const nameInput =
+        document.getElementById("customer_name");
 
     if (nameInput) {
         setTimeout(function () {
@@ -105,7 +106,8 @@ window.showCreateForm = function () {
 window.hideCreateForm = function () {
     console.log("hideCreateForm() called");
 
-    const modal = document.getElementById("createModal");
+    const modal =
+        document.getElementById("createModal");
 
     if (modal) {
         modal.classList.add("hidden");
@@ -131,7 +133,8 @@ async function loadTickets() {
     console.log("loadTickets() called");
 
     if (!ticketList) {
-        ticketList = document.getElementById("ticketList");
+        ticketList =
+            document.getElementById("ticketList");
     }
 
     if (!ticketList) {
@@ -140,6 +143,7 @@ async function loadTickets() {
     }
 
     try {
+
         ticketList.innerHTML = `
             <div class="p-8 text-center text-gray-500">
                 Loading tickets...
@@ -184,7 +188,8 @@ async function loadTickets() {
             cache: "no-store"
         });
 
-        const responseText = await response.text();
+        const responseText =
+            await response.text();
 
         let data;
 
@@ -193,11 +198,18 @@ async function loadTickets() {
                 ? JSON.parse(responseText)
                 : [];
         } catch (parseError) {
-            console.error("JSON parse error:", parseError);
-            throw new Error("Invalid server response.");
+            console.error(
+                "JSON parse error:",
+                parseError
+            );
+
+            throw new Error(
+                "Invalid server response."
+            );
         }
 
         if (!response.ok) {
+
             const message =
                 data && data.detail
                     ? data.detail
@@ -206,20 +218,30 @@ async function loadTickets() {
             throw new Error(message);
         }
 
-        console.log("Tickets received:", data);
+        console.log(
+            "Tickets received:",
+            data
+        );
 
         if (!Array.isArray(data)) {
-            throw new Error("Invalid API response.");
+            throw new Error(
+                "Invalid API response."
+            );
         }
 
         renderTickets(data);
         updateCounters(data);
 
     } catch (error) {
-        console.error("Load tickets error:", error);
+
+        console.error(
+            "Load tickets error:",
+            error
+        );
 
         ticketList.innerHTML = `
             <div class="p-6 bg-red-50 border border-red-200 rounded-xl text-red-700">
+
                 <p class="font-semibold">
                     Failed to load tickets.
                 </p>
@@ -235,6 +257,7 @@ async function loadTickets() {
                 >
                     Retry
                 </button>
+
             </div>
         `;
 
@@ -251,11 +274,13 @@ window.loadTickets = loadTickets;
 // =====================================================
 
 function renderTickets(tickets) {
+
     if (!ticketList) {
         return;
     }
 
     if (!tickets || tickets.length === 0) {
+
         ticketList.innerHTML = `
             <div class="p-8 text-center bg-white rounded-xl border border-gray-200">
 
@@ -277,97 +302,100 @@ function renderTickets(tickets) {
         return;
     }
 
-    ticketList.innerHTML = tickets.map(function (ticket) {
+    ticketList.innerHTML =
+        tickets.map(function (ticket) {
 
-        const ticketId =
-            escapeHTML(ticket.ticket_id);
+            const ticketId =
+                escapeHTML(ticket.ticket_id);
 
-        const customerName =
-            escapeHTML(ticket.customer_name);
+            const customerName =
+                escapeHTML(ticket.customer_name);
 
-        const customerEmail =
-            escapeHTML(ticket.customer_email);
+            const customerEmail =
+                escapeHTML(ticket.customer_email);
 
-        const subject =
-            escapeHTML(ticket.subject);
+            const subject =
+                escapeHTML(ticket.subject);
 
-        const description =
-            escapeHTML(ticket.description);
+            const description =
+                escapeHTML(ticket.description);
 
-        const status =
-            ticket.status || "Open";
+            const status =
+                ticket.status || "Open";
 
-        const encodedTicketId =
-            encodeURIComponent(ticket.ticket_id);
+            const encodedTicketId =
+                encodeURIComponent(
+                    ticket.ticket_id
+                );
 
-        return `
-            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
+            return `
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
 
-                <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
 
-                    <div class="flex-1">
+                        <div class="flex-1">
 
-                        <div class="flex items-center gap-3 flex-wrap">
+                            <div class="flex items-center gap-3 flex-wrap">
 
-                            <span class="font-bold text-gray-900">
-                                ${ticketId}
-                            </span>
+                                <span class="font-bold text-gray-900">
+                                    ${ticketId}
+                                </span>
 
-                            ${statusBadge(status)}
+                                ${statusBadge(status)}
+
+                            </div>
+
+                            <h3 class="text-lg font-semibold text-gray-900 mt-3">
+                                ${subject}
+                            </h3>
+
+                            <p class="text-gray-600 text-sm mt-2">
+                                ${description}
+                            </p>
+
+                            <div class="mt-4 space-y-1 text-sm">
+
+                                <p>
+                                    <span class="font-medium text-gray-700">
+                                        Customer:
+                                    </span>
+                                    ${customerName}
+                                </p>
+
+                                <p>
+                                    <span class="font-medium text-gray-700">
+                                        Email:
+                                    </span>
+                                    ${customerEmail}
+                                </p>
+
+                                <p class="text-gray-500">
+                                    Created:
+                                    ${formatDate(ticket.created_at)}
+                                </p>
+
+                            </div>
 
                         </div>
 
-                        <h3 class="text-lg font-semibold text-gray-900 mt-3">
-                            ${subject}
-                        </h3>
+                        <div>
 
-                        <p class="text-gray-600 text-sm mt-2">
-                            ${description}
-                        </p>
-
-                        <div class="mt-4 space-y-1 text-sm">
-
-                            <p>
-                                <span class="font-medium text-gray-700">
-                                    Customer:
-                                </span>
-                                ${customerName}
-                            </p>
-
-                            <p>
-                                <span class="font-medium text-gray-700">
-                                    Email:
-                                </span>
-                                ${customerEmail}
-                            </p>
-
-                            <p class="text-gray-500">
-                                Created:
-                                ${formatDate(ticket.created_at)}
-                            </p>
+                            <button
+                                type="button"
+                                onclick="showDetails('${encodedTicketId}')"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            >
+                                View Details
+                            </button>
 
                         </div>
-
-                    </div>
-
-                    <div>
-
-                        <button
-                            type="button"
-                            onclick="showDetails('${encodedTicketId}')"
-                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                        >
-                            View Details
-                        </button>
 
                     </div>
 
                 </div>
+            `;
 
-            </div>
-        `;
-
-    }).join("");
+        }).join("");
 }
 
 
@@ -395,7 +423,8 @@ function updateCounters(tickets) {
             : [];
 
     if (totalCount) {
-        totalCount.textContent = list.length;
+        totalCount.textContent =
+            list.length;
     }
 
     if (openCount) {
@@ -451,8 +480,14 @@ async function createTicket(event) {
         !subjectInput ||
         !descriptionInput
     ) {
-        console.error("Create form fields not found");
-        alert("Create ticket form is not configured correctly.");
+        console.error(
+            "Create form fields not found"
+        );
+
+        alert(
+            "Create ticket form is not configured correctly."
+        );
+
         return;
     }
 
@@ -474,7 +509,10 @@ async function createTicket(event) {
         !subject ||
         !description
     ) {
-        alert("Please fill all fields.");
+        alert(
+            "Please fill all fields."
+        );
+
         return;
     }
 
@@ -485,26 +523,33 @@ async function createTicket(event) {
 
     if (submitButton) {
         submitButton.disabled = true;
-        submitButton.textContent = "Creating...";
+        submitButton.textContent =
+            "Creating...";
     }
 
     try {
 
-        console.log("POST:", API_BASE);
+        console.log(
+            "POST:",
+            API_BASE
+        );
 
-        const response = await fetch(API_BASE, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            },
-            body: JSON.stringify({
-                customer_name: name,
-                customer_email: email,
-                subject: subject,
-                description: description
-            })
-        });
+        const response =
+            await fetch(API_BASE, {
+                method: "POST",
+                headers: {
+                    "Content-Type":
+                        "application/json",
+                    "Accept":
+                        "application/json"
+                },
+                body: JSON.stringify({
+                    customer_name: name,
+                    customer_email: email,
+                    subject: subject,
+                    description: description
+                })
+            });
 
         const responseText =
             await response.text();
@@ -512,22 +557,33 @@ async function createTicket(event) {
         let data = {};
 
         try {
+
             data = responseText
                 ? JSON.parse(responseText)
                 : {};
+
         } catch (parseError) {
-            console.error("POST JSON parse error:", parseError);
+
+            console.error(
+                "POST JSON parse error:",
+                parseError
+            );
 
             data = {
                 detail: responseText
             };
         }
 
-        console.log("Create ticket response:", data);
+        console.log(
+            "Create ticket response:",
+            data
+        );
 
         if (!response.ok) {
+
             throw new Error(
-                data.detail || `HTTP ${response.status}`
+                data.detail ||
+                `HTTP ${response.status}`
             );
         }
 
@@ -536,7 +592,9 @@ async function createTicket(event) {
         );
 
         const form =
-            document.getElementById("createTicketForm");
+            document.getElementById(
+                "createTicketForm"
+            );
 
         if (form) {
             form.reset();
@@ -548,7 +606,10 @@ async function createTicket(event) {
 
     } catch (error) {
 
-        console.error("Create ticket error:", error);
+        console.error(
+            "Create ticket error:",
+            error
+        );
 
         alert(
             `Failed to create ticket: ${error.message}`
@@ -557,8 +618,11 @@ async function createTicket(event) {
     } finally {
 
         if (submitButton) {
+
             submitButton.disabled = false;
-            submitButton.textContent = "Create Ticket";
+
+            submitButton.textContent =
+                "Create Ticket";
         }
     }
 }
@@ -577,17 +641,29 @@ async function showDetails(ticketId) {
         decodeURIComponent(ticketId);
 
     const detailsModal =
-        document.getElementById("detailsModal");
+        document.getElementById(
+            "detailsModal"
+        );
 
     const ticketDetails =
-        document.getElementById("ticketDetails");
+        document.getElementById(
+            "ticketDetails"
+        );
 
-    if (!detailsModal || !ticketDetails) {
-        console.error("Details modal elements not found");
+    if (
+        !detailsModal ||
+        !ticketDetails
+    ) {
+        console.error(
+            "Details modal elements not found"
+        );
+
         return;
     }
 
-    detailsModal.classList.remove("hidden");
+    detailsModal.classList.remove(
+        "hidden"
+    );
 
     ticketDetails.innerHTML = `
         <div class="p-6 text-center text-gray-500">
@@ -597,16 +673,18 @@ async function showDetails(ticketId) {
 
     try {
 
-        const response = await fetch(
-            `${API_BASE}/${encodeURIComponent(decodedTicketId)}`,
-            {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json"
-                },
-                cache: "no-store"
-            }
-        );
+        const response =
+            await fetch(
+                `${API_BASE}/${encodeURIComponent(decodedTicketId)}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    },
+                    cache: "no-store"
+                }
+            );
 
         const responseText =
             await response.text();
@@ -614,11 +692,17 @@ async function showDetails(ticketId) {
         let ticket = {};
 
         try {
+
             ticket = responseText
                 ? JSON.parse(responseText)
                 : {};
+
         } catch (parseError) {
-            console.error("Details JSON parse error:", parseError);
+
+            console.error(
+                "Details JSON parse error:",
+                parseError
+            );
 
             ticket = {
                 detail: responseText
@@ -626,15 +710,32 @@ async function showDetails(ticketId) {
         }
 
         if (!response.ok) {
+
             throw new Error(
-                ticket.detail || "Ticket not found."
+                ticket.detail ||
+                "Ticket not found."
             );
         }
 
+
+        // -------------------------------------------------
+        // FIX NOTES
+        // Backend returns notes as objects.
+        // -------------------------------------------------
+
         const notesText =
             Array.isArray(ticket.notes)
-                ? ticket.notes.join("\n")
-                : (ticket.notes || "");
+                ? ticket.notes
+                    .map(function (note) {
+                        return note.note || "";
+                    })
+                    .filter(Boolean)
+                    .join("\n")
+                : (
+                    ticket.notes ||
+                    ""
+                );
+
 
         ticketDetails.innerHTML = `
 
@@ -643,6 +744,7 @@ async function showDetails(ticketId) {
                 <div class="flex items-center justify-between">
 
                     <div>
+
                         <p class="text-sm text-gray-500">
                             Ticket ID
                         </p>
@@ -650,15 +752,20 @@ async function showDetails(ticketId) {
                         <h2 class="text-xl font-bold">
                             ${escapeHTML(ticket.ticket_id)}
                         </h2>
+
                     </div>
 
                     ${statusBadge(ticket.status)}
 
                 </div>
 
+
+                <!-- Customer -->
+
                 <div class="grid md:grid-cols-2 gap-4">
 
                     <div>
+
                         <label class="block text-sm font-medium mb-1">
                             Customer Name
                         </label>
@@ -669,9 +776,12 @@ async function showDetails(ticketId) {
                             value="${escapeHTML(ticket.customer_name)}"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2"
                         >
+
                     </div>
 
+
                     <div>
+
                         <label class="block text-sm font-medium mb-1">
                             Customer Email
                         </label>
@@ -682,11 +792,16 @@ async function showDetails(ticketId) {
                             value="${escapeHTML(ticket.customer_email)}"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2"
                         >
+
                     </div>
 
                 </div>
 
+
+                <!-- Subject -->
+
                 <div>
+
                     <label class="block text-sm font-medium mb-1">
                         Subject
                     </label>
@@ -697,9 +812,14 @@ async function showDetails(ticketId) {
                         value="${escapeHTML(ticket.subject)}"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2"
                     >
+
                 </div>
 
+
+                <!-- Description -->
+
                 <div>
+
                     <label class="block text-sm font-medium mb-1">
                         Description
                     </label>
@@ -709,9 +829,14 @@ async function showDetails(ticketId) {
                         rows="4"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2"
                     >${escapeHTML(ticket.description)}</textarea>
+
                 </div>
 
+
+                <!-- Status -->
+
                 <div>
+
                     <label class="block text-sm font-medium mb-1">
                         Status
                     </label>
@@ -721,25 +846,36 @@ async function showDetails(ticketId) {
                         class="w-full border border-gray-300 rounded-lg px-3 py-2"
                     >
 
-                        <option value="Open"
-                            ${ticket.status === "Open" ? "selected" : ""}>
+                        <option
+                            value="Open"
+                            ${ticket.status === "Open" ? "selected" : ""}
+                        >
                             Open
                         </option>
 
-                        <option value="In Progress"
-                            ${ticket.status === "In Progress" ? "selected" : ""}>
+                        <option
+                            value="In Progress"
+                            ${ticket.status === "In Progress" ? "selected" : ""}
+                        >
                             In Progress
                         </option>
 
-                        <option value="Closed"
-                            ${ticket.status === "Closed" ? "selected" : ""}>
+                        <option
+                            value="Closed"
+                            ${ticket.status === "Closed" ? "selected" : ""}
+                        >
                             Closed
                         </option>
 
                     </select>
+
                 </div>
 
+
+                <!-- Notes -->
+
                 <div>
+
                     <label class="block text-sm font-medium mb-1">
                         Notes
                     </label>
@@ -750,22 +886,45 @@ async function showDetails(ticketId) {
                         placeholder="Add notes..."
                         class="w-full border border-gray-300 rounded-lg px-3 py-2"
                     >${escapeHTML(notesText)}</textarea>
+
                 </div>
 
-                <div class="flex justify-end gap-3 pt-4">
+
+                <!-- AI ANALYSIS -->
+
+                <div
+                    id="aiAnalysis"
+                    class="mt-5"
+                >
+                </div>
+
+
+                <!-- ACTION BUTTONS -->
+
+                <div class="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+
+                    <button
+                        type="button"
+                        onclick="analyzeTicket('${encodeURIComponent(ticket.ticket_id)}')"
+                        class="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                    >
+                        🤖 Analyze with AI
+                    </button>
+
 
                     <button
                         type="button"
                         onclick="hideDetails()"
-                        class="px-4 py-2 border rounded-lg"
+                        class="px-4 py-2 border rounded-lg hover:bg-gray-50"
                     >
                         Cancel
                     </button>
 
+
                     <button
                         type="button"
                         onclick="saveTicketUpdate('${encodeURIComponent(ticket.ticket_id)}')"
-                        class="px-5 py-2 bg-blue-600 text-white rounded-lg"
+                        class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                     >
                         Save Update
                     </button>
@@ -777,11 +936,16 @@ async function showDetails(ticketId) {
 
     } catch (error) {
 
-        console.error("Show details error:", error);
+        console.error(
+            "Show details error:",
+            error
+        );
 
         ticketDetails.innerHTML = `
             <div class="p-6 bg-red-50 text-red-700 rounded-lg">
+
                 ${escapeHTML(error.message)}
+
             </div>
         `;
     }
@@ -792,16 +956,350 @@ window.showDetails = showDetails;
 
 
 // =====================================================
+// AI TICKET ANALYSIS
+// =====================================================
+
+async function analyzeTicket(ticketId) {
+
+    const decodedTicketId =
+        decodeURIComponent(ticketId);
+
+    const aiBox =
+        document.getElementById(
+            "aiAnalysis"
+        );
+
+    if (!aiBox) {
+
+        console.error(
+            "AI analysis container not found"
+        );
+
+        return;
+    }
+
+
+    // Loading state
+
+    aiBox.innerHTML = `
+
+        <div class="p-5 bg-purple-50 border border-purple-200 rounded-xl">
+
+            <div class="flex items-center gap-3">
+
+                <div class="text-2xl">
+                    🤖
+                </div>
+
+                <div>
+
+                    <p class="font-semibold text-purple-700">
+                        AI is analyzing this ticket...
+                    </p>
+
+                    <p class="text-sm text-purple-500 mt-1">
+                        Please wait a moment.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+    `;
+
+
+    try {
+
+        console.log(
+            "AI analysis:",
+            decodedTicketId
+        );
+
+
+        const response =
+            await fetch(
+                `${API_BASE}/${encodeURIComponent(decodedTicketId)}/ai-analysis`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
+
+
+        const responseText =
+            await response.text();
+
+
+        let data = {};
+
+        try {
+
+            data = responseText
+                ? JSON.parse(responseText)
+                : {};
+
+        } catch (parseError) {
+
+            console.error(
+                "AI JSON parse error:",
+                parseError
+            );
+
+            throw new Error(
+                "Invalid response from AI server."
+            );
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                `HTTP ${response.status}`
+            );
+        }
+
+
+        if (
+            !data.analysis ||
+            typeof data.analysis !== "object"
+        ) {
+
+            throw new Error(
+                "AI returned an invalid analysis."
+            );
+        }
+
+
+        const analysis =
+            data.analysis;
+
+
+        aiBox.innerHTML = `
+
+            <div class="p-5 bg-purple-50 border border-purple-200 rounded-xl">
+
+                <div class="flex items-center justify-between mb-4">
+
+                    <h3 class="text-lg font-bold text-purple-700">
+                        🤖 AI Ticket Analysis
+                    </h3>
+
+                    <span class="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
+                        AI Powered
+                    </span>
+
+                </div>
+
+
+                <!-- AI Classification -->
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+
+                    <!-- Category -->
+
+                    <div class="bg-white p-4 rounded-lg border">
+
+                        <p class="text-xs text-gray-500 uppercase">
+                            Category
+                        </p>
+
+                        <p class="font-semibold text-gray-800 mt-1">
+                            ${escapeHTML(analysis.category)}
+                        </p>
+
+                    </div>
+
+
+                    <!-- Priority -->
+
+                    <div class="bg-white p-4 rounded-lg border">
+
+                        <p class="text-xs text-gray-500 uppercase">
+                            Priority
+                        </p>
+
+                        <p class="font-semibold text-gray-800 mt-1">
+                            ${escapeHTML(analysis.priority)}
+                        </p>
+
+                    </div>
+
+
+                    <!-- Sentiment -->
+
+                    <div class="bg-white p-4 rounded-lg border">
+
+                        <p class="text-xs text-gray-500 uppercase">
+                            Sentiment
+                        </p>
+
+                        <p class="font-semibold text-gray-800 mt-1">
+                            ${escapeHTML(analysis.sentiment)}
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Summary -->
+
+                <div class="bg-white p-4 rounded-lg border mt-3">
+
+                    <p class="font-semibold text-gray-800 mb-2">
+                        📝 AI Summary
+                    </p>
+
+                    <p class="text-gray-700 text-sm leading-6">
+                        ${escapeHTML(analysis.summary)}
+                    </p>
+
+                </div>
+
+
+                <!-- Suggested Reply -->
+
+                <div class="bg-white p-4 rounded-lg border mt-3">
+
+                    <div class="flex items-center justify-between gap-3 mb-2">
+
+                        <p class="font-semibold text-gray-800">
+                            💬 Suggested Customer Reply
+                        </p>
+
+                        <button
+                            type="button"
+                            onclick="copyAIReply()"
+                            class="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg"
+                        >
+                            Copy
+                        </button>
+
+                    </div>
+
+                    <p
+                        id="aiSuggestedReply"
+                        class="text-gray-700 text-sm leading-6"
+                    >
+                        ${escapeHTML(analysis.suggested_reply)}
+                    </p>
+
+                </div>
+
+            </div>
+        `;
+
+
+        // Save reply in memory for Copy button
+        window.currentAISuggestedReply =
+            analysis.suggested_reply || "";
+
+
+    } catch (error) {
+
+        console.error(
+            "AI analysis error:",
+            error
+        );
+
+
+        aiBox.innerHTML = `
+
+            <div class="p-5 bg-red-50 border border-red-200 rounded-xl">
+
+                <p class="font-semibold text-red-700">
+                    ❌ AI Analysis Failed
+                </p>
+
+                <p class="text-sm text-red-600 mt-2">
+                    ${escapeHTML(error.message)}
+                </p>
+
+                <button
+                    type="button"
+                    onclick="analyzeTicket('${encodeURIComponent(decodedTicketId)}')"
+                    class="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                    Try Again
+                </button>
+
+            </div>
+        `;
+    }
+}
+
+
+window.analyzeTicket = analyzeTicket;
+
+
+// =====================================================
+// COPY AI REPLY
+// =====================================================
+
+async function copyAIReply() {
+
+    const reply =
+        window.currentAISuggestedReply || "";
+
+
+    if (!reply) {
+
+        alert(
+            "No AI reply available."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        await navigator.clipboard.writeText(
+            reply
+        );
+
+        alert(
+            "AI reply copied to clipboard."
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Copy failed:",
+            error
+        );
+
+        alert(
+            "Could not copy the reply."
+        );
+    }
+}
+
+
+window.copyAIReply = copyAIReply;
+
+
+// =====================================================
 // HIDE DETAILS
 // =====================================================
 
 function hideDetails() {
 
     const modal =
-        document.getElementById("detailsModal");
+        document.getElementById(
+            "detailsModal"
+        );
 
     if (modal) {
-        modal.classList.add("hidden");
+        modal.classList.add(
+            "hidden"
+        );
     }
 }
 
@@ -818,53 +1316,73 @@ async function saveTicketUpdate(ticketId) {
     const decodedTicketId =
         decodeURIComponent(ticketId);
 
+
     const customerNameElement =
-        document.getElementById("detail_customer_name");
+        document.getElementById(
+            "detail_customer_name"
+        );
 
     const customerEmailElement =
-        document.getElementById("detail_customer_email");
+        document.getElementById(
+            "detail_customer_email"
+        );
 
     const subjectElement =
-        document.getElementById("detail_subject");
+        document.getElementById(
+            "detail_subject"
+        );
 
     const descriptionElement =
-        document.getElementById("detail_description");
+        document.getElementById(
+            "detail_description"
+        );
 
     const statusElement =
-        document.getElementById("detail_status");
+        document.getElementById(
+            "detail_status"
+        );
 
     const notesElement =
-        document.getElementById("detail_notes");
+        document.getElementById(
+            "detail_notes"
+        );
+
 
     const customerName =
         customerNameElement
             ? customerNameElement.value.trim()
             : "";
 
+
     const customerEmail =
         customerEmailElement
             ? customerEmailElement.value.trim()
             : "";
+
 
     const subject =
         subjectElement
             ? subjectElement.value.trim()
             : "";
 
+
     const description =
         descriptionElement
             ? descriptionElement.value.trim()
             : "";
+
 
     const status =
         statusElement
             ? statusElement.value
             : "Open";
 
+
     const notes =
         notesElement
             ? notesElement.value.trim()
             : "";
+
 
     if (
         !customerName ||
@@ -872,9 +1390,14 @@ async function saveTicketUpdate(ticketId) {
         !subject ||
         !description
     ) {
-        alert("Please fill all required fields.");
+
+        alert(
+            "Please fill all required fields."
+        );
+
         return;
     }
+
 
     try {
 
@@ -883,57 +1406,94 @@ async function saveTicketUpdate(ticketId) {
             `${API_BASE}/${decodedTicketId}`
         );
 
-        const response = await fetch(
-            `${API_BASE}/${encodeURIComponent(decodedTicketId)}`,
-            {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
-                body: JSON.stringify({
-                    customer_name: customerName,
-                    customer_email: customerEmail,
-                    subject: subject,
-                    description: description,
-                    status: status,
-                    notes: notes || null
-                })
-            }
-        );
+
+        const response =
+            await fetch(
+                `${API_BASE}/${encodeURIComponent(decodedTicketId)}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+                        "Accept":
+                            "application/json"
+                    },
+                    body: JSON.stringify({
+
+                        customer_name:
+                            customerName,
+
+                        customer_email:
+                            customerEmail,
+
+                        subject:
+                            subject,
+
+                        description:
+                            description,
+
+                        status:
+                            status,
+
+                        notes:
+                            notes || null
+                    })
+                }
+            );
+
 
         const responseText =
             await response.text();
 
+
         let data = {};
 
+
         try {
+
             data = responseText
                 ? JSON.parse(responseText)
                 : {};
+
         } catch (parseError) {
-            console.error("PUT JSON parse error:", parseError);
+
+            console.error(
+                "PUT JSON parse error:",
+                parseError
+            );
 
             data = {
                 detail: responseText
             };
         }
 
+
         if (!response.ok) {
+
             throw new Error(
-                data.detail || `HTTP ${response.status}`
+                data.detail ||
+                `HTTP ${response.status}`
             );
         }
 
-        alert("Ticket updated successfully.");
+
+        alert(
+            "Ticket updated successfully."
+        );
+
 
         window.hideDetails();
 
+
         await loadTickets();
+
 
     } catch (error) {
 
-        console.error("Save update error:", error);
+        console.error(
+            "Save update error:",
+            error
+        );
 
         alert(
             `Failed to update ticket: ${error.message}`
@@ -942,7 +1502,8 @@ async function saveTicketUpdate(ticketId) {
 }
 
 
-window.saveTicketUpdate = saveTicketUpdate;
+window.saveTicketUpdate =
+    saveTicketUpdate;
 
 
 // =====================================================
@@ -952,6 +1513,7 @@ window.saveTicketUpdate = saveTicketUpdate;
 function setupFilters() {
 
     if (searchInput) {
+
         searchInput.addEventListener(
             "input",
             function () {
@@ -960,7 +1522,9 @@ function setupFilters() {
         );
     }
 
+
     if (statusFilter) {
+
         statusFilter.addEventListener(
             "change",
             function () {
@@ -982,6 +1546,7 @@ function setupKeyboard() {
         function (event) {
 
             if (event.key === "Escape") {
+
                 window.hideCreateForm();
                 window.hideDetails();
             }
@@ -1002,24 +1567,33 @@ function setupModalBackdrop() {
         function (event) {
 
             const createModal =
-                document.getElementById("createModal");
+                document.getElementById(
+                    "createModal"
+                );
 
             const detailsModal =
-                document.getElementById("detailsModal");
+                document.getElementById(
+                    "detailsModal"
+                );
+
 
             if (
                 createModal &&
                 event.target === createModal
             ) {
+
                 window.hideCreateForm();
             }
+
 
             if (
                 detailsModal &&
                 event.target === detailsModal
             ) {
+
                 window.hideDetails();
             }
+
         }
     );
 }
@@ -1037,34 +1611,50 @@ document.addEventListener(
             "DOM loaded - initializing Support CRM"
         );
 
+
         searchInput =
-            document.getElementById("search");
+            document.getElementById(
+                "search"
+            );
+
 
         statusFilter =
-            document.getElementById("status");
+            document.getElementById(
+                "status"
+            );
+
 
         ticketList =
-            document.getElementById("ticketList");
+            document.getElementById(
+                "ticketList"
+            );
+
 
         console.log(
             "searchInput:",
             searchInput
         );
 
+
         console.log(
             "statusFilter:",
             statusFilter
         );
+
 
         console.log(
             "ticketList:",
             ticketList
         );
 
+
         setupFilters();
+
         setupKeyboard();
+
         setupModalBackdrop();
 
         loadTickets();
+
     }
 );
