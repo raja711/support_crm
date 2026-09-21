@@ -7,6 +7,7 @@ from .database import get_db
 from .models import Note, Ticket
 from .schemas import TicketCreate, TicketResponse, TicketUpdate
 
+from .ai import analyze_ticket
 router = APIRouter(prefix="/api", tags=["Tickets"])
 
 
